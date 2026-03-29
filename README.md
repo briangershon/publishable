@@ -32,7 +32,7 @@ After merging latest code to main branch:
 
 A GitHub release is automatically written and published to NPM.
 
-**First-time setup:** Add `NPM_TOKEN` and `OPENAI_API_KEY` secrets in GitHub repo Settings → Secrets and variables → Actions. Also run `npm login` locally and ensure you have access to the `@briangershon` scope.
+**First-time setup:** Add `NPM_TOKEN` and `OPENROUTER_API_KEY` secrets in GitHub repo Settings → Secrets and variables → Actions. Also run `npm login` locally and ensure you have access to the `@briangershon` scope.
 
 ## License
 
