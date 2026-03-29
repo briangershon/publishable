@@ -1,0 +1,32 @@
+{
+  "name": "@briangershon/publishable",
+  "version": "0.1.0",
+  "description": "A tool for agents to manage blog and other publishable content",
+  "type": "module",
+  "bin": {
+    "publishable": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "node --experimental-strip-types src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "cli",
+    "publishing",
+    "agents",
+    "blog"
+  ],
+  "author": "Brian Gershon",
+  "license": "MIT",
+  "engines": {
+    "node": ">=v22.22.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0"
+  }
+}
