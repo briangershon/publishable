@@ -1,21 +1,15 @@
 #!/usr/bin/env node
-import { parseArgs } from 'node:util';
+import { Command } from "commander";
+import pkg from "../package.json" with { type: "json" };
 
-const { values } = parseArgs({
-  options: {
-    help: { type: 'boolean', short: 'h' },
-  },
-});
+const program = new Command();
 
-if (values.help) {
-  console.log(`Usage: publishable [OPTIONS]
+program
+  .name("publishable")
+  .description(
+    "A tool for agents to manage blog and other publishable content.",
+  )
+  .version(pkg.version)
+  .showHelpAfterError();
 
-A tool for agents to manage blog and other publishable content.
-
-Options:
-  -h, --help    Show this message and exit
-
-Examples:
-  publishable --help`);
-  process.exit(0);
-}
+program.parse();
