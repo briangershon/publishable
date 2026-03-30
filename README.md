@@ -1,6 +1,6 @@
 # @briangershon/publishable
 
-A tool for agents to manage blog and other publishable content.
+A tool for creating and managing content for publication.
 
 ## Installation
 
