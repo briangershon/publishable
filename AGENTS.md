@@ -84,6 +84,20 @@ Examples of valid handles: `my-post`, `phase-0-spec`, `api-guide-2024`
 | Errors           | `src/utils/errors.ts`                     | `PublishableError` class               |
 | Output           | `src/utils/output.ts`                     | Human-readable and JSON output         |
 
+## Tests
+
+Test files live **next to the source file they test**, named `<module>.test.ts`:
+
+```
+src/services/PublishableService.test.ts
+src/services/ValidationService.test.ts
+src/repositories/LocalFileRepository.test.ts
+src/utils/errors.test.ts
+src/utils/output.test.ts
+```
+
+Run tests with `npm test`. Coverage report with `npm run test:coverage`. Both are included in `npm run check`.
+
 ## ValidationService Contract
 
 `ValidationService.validate()` **returns** a `ValidationResult`, it never throws. Callers decide whether to throw `SCHEMA_VALIDATION_FAILED`. This keeps validation reusable for both `validate` (dry-run) and `update` (throws on invalid).
