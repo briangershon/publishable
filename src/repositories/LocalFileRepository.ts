@@ -116,7 +116,7 @@ export class LocalFileRepository {
       .map((f) => f.match(/^v(\d+)\.md$/))
       .filter((m): m is RegExpMatchArray => m !== null)
       .map((m) => parseInt(m[1], 10));
-    return numbers.sort((a, b) => a - b);
+    return numbers.toSorted((a, b) => a - b);
   }
 
   async listHandles(): Promise<Handle[]> {
@@ -136,7 +136,7 @@ export class LocalFileRepository {
         // skip unreadable entries
       }
     }
-    return handles.sort();
+    return handles.toSorted();
   }
 
   async readFileContent(filePath: string): Promise<string> {
