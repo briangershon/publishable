@@ -104,6 +104,10 @@ Examples of valid handles: `my-post`, `phase-0-spec`, `api-guide-2024`
 
 Concurrent writes to the same publishable are **not safe** in Phase 0. This is out of scope. Do not add locking or queuing unless explicitly asked.
 
+## Code Quality
+
+Run `npm run check` to ensure there are no coding errors before committing or submitting changes.
+
 ## Output JSON Envelope
 
 All `--json` output follows this envelope:
