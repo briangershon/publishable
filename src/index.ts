@@ -16,7 +16,7 @@ const program = new Command();
 program
   .name("publishable")
   .description(
-    "A tool for agents to manage blog and other publishable content.",
+    "A content management tool for creating publishable posts with standardized metadata, built-in validation, and full version history.",
   )
   .version(pkg.version)
   .showHelpAfterError();

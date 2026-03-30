@@ -1,9 +1,9 @@
 # @briangershon/publishable
 
-A blog publishing tool that helps create posts with complete, consistent metadata and full version history.
+A content management tool for creating publishable posts with standardized metadata, built-in validation, and full version history.
 
-- Prevents missing publishing fields by standardizing required inputs
-- Saves each revision, making it easy to review or restore older versions
+- Prevents missing publishing fields by standardizing required inputs, with sample schemas for blog posts, LinkedIn articles, Bluesky posts, and X posts. You can also customize existing schemas or create your own.
+- Saves every revision, making it easy to review changes or restore earlier versions.
 
 ## Installation
 
