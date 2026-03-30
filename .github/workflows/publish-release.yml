@@ -3,7 +3,7 @@ name: Auto-Release with AI Summaries
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   build:
@@ -45,7 +45,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -70,7 +70,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: '${{ steps.curtag.outputs.CURRENT_TAG }} - ${{ steps.notes.outputs.release_title }}'
+          name: "${{ steps.curtag.outputs.CURRENT_TAG }} - ${{ steps.notes.outputs.release_title }}"
           body: ${{ steps.notes.outputs.release_notes }}
           draft: false
           prerelease: false
