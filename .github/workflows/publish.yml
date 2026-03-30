@@ -12,7 +12,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -28,15 +28,13 @@ jobs:
 
       - name: Publish to NPM
         run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   release:
     needs: publish
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # This gets the full history for parsing commits
 
@@ -66,7 +64,7 @@ jobs:
           echo "Commit log created"
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -91,7 +89,7 @@ jobs:
           echo "release_title=$RELEASE_TITLE" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: "${{ steps.curtag.outputs.CURRENT_TAG }} - ${{ steps.notes.outputs.release_title }}"
           body: ${{ steps.notes.outputs.release_notes }}
