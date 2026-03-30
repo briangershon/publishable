@@ -1,6 +1,9 @@
 # @briangershon/publishable
 
-A tool for creating and managing content for publication.
+A blog publishing tool that helps create posts with complete, consistent metadata and full version history.
+
+- Prevents missing publishing fields by standardizing required inputs
+- Saves each revision, making it easy to review or restore older versions
 
 ## Installation
 
