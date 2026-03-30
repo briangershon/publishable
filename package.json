@@ -10,7 +10,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x dist/index.js",
     "dev": "node --experimental-strip-types src/index.ts",
     "start": "node dist/index.js"
   },
@@ -22,6 +22,10 @@
   ],
   "author": "Brian Gershon",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/briangershon/publishable"
+  },
   "engines": {
     "node": ">=v22.22.2"
   },
