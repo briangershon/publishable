@@ -1,5 +1,23 @@
 export type Handle = string;
 
+export const BUILTIN_SCHEMA_TYPES = [
+  "blog",
+  "linkedin",
+  "bluesky",
+  "x",
+] as const;
+export type BuiltinSchemaType = (typeof BUILTIN_SCHEMA_TYPES)[number];
+
+export interface PublishableSchemaBody {
+  required?: boolean;
+  requireHeading?: boolean;
+}
+
+export interface PublishableSchema {
+  [key: string]: unknown;
+  "x-publishable"?: { body?: PublishableSchemaBody };
+}
+
 export interface PublishableMeta {
   handle: Handle;
   title: string;
@@ -10,13 +28,13 @@ export interface PublishableMeta {
 
 export interface VersionFrontmatter {
   version: number;
-  schema: "publishable/v1";
+  schema: string;
   message: string;
   created_at: string;
   title: string;
-  slug: string;
+  slug?: string;
   summary: string;
-  tags: string[];
+  tags?: string[];
   reverted_from?: number;
 }
 
@@ -49,6 +67,7 @@ export type ErrorCode =
   | "VERSION_NOT_FOUND"
   | "INVALID_HANDLE"
   | "TITLE_REQUIRED_ON_CREATE"
+  | "SCHEMA_NOT_FOUND"
   | "SCHEMA_VALIDATION_FAILED"
   | "FILE_NOT_FOUND"
   | "STORAGE_ERROR";

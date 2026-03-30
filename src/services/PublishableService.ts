@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import { LocalFileRepository } from "../repositories/LocalFileRepository.js";
 import { ValidationService } from "./ValidationService.js";
 import { PublishableError } from "../utils/errors.js";
+import { DEFAULT_SCHEMAS } from "../schemas/defaults.js";
 import type {
   Handle,
   PublishableMeta,
@@ -38,9 +39,12 @@ export class PublishableService {
   async update(
     handle: string,
     filePath: string,
-    opts: { title?: string; message?: string },
+    opts: { title?: string; message?: string; schema?: string },
   ): Promise<PublishableSummary> {
     this.assertValidHandle(handle);
+
+    const resolvedSchema = opts.schema ?? "blog";
+    const schemaJson = await this.repo.readSchemaFile(resolvedSchema);
 
     const fileContent = await this.repo.readFileContent(filePath);
     const parsed = matter(fileContent);
@@ -55,7 +59,11 @@ export class PublishableService {
     const frontmatterToValidate = { ...fileFrontmatter };
     if (resolvedTitle) frontmatterToValidate["title"] = resolvedTitle;
 
-    const validation = this.validator.validate(frontmatterToValidate, body);
+    const validation = this.validator.validate(
+      frontmatterToValidate,
+      body,
+      schemaJson,
+    );
     if (!validation.valid) {
       throw new PublishableError(
         "SCHEMA_VALIDATION_FAILED",
@@ -99,13 +107,17 @@ export class PublishableService {
 
     const versionFrontmatter: VersionFrontmatter = {
       version: newVersionNumber,
-      schema: "publishable/v1",
+      schema: `${resolvedSchema}/v1`,
       message: opts.message ?? "",
       created_at: now,
       title: resolvedTitle ?? meta.title,
-      slug: frontmatterToValidate["slug"] as string,
+      ...(frontmatterToValidate["slug"] !== undefined && {
+        slug: frontmatterToValidate["slug"] as string,
+      }),
       summary: frontmatterToValidate["summary"] as string,
-      tags: frontmatterToValidate["tags"] as string[],
+      ...(frontmatterToValidate["tags"] !== undefined && {
+        tags: frontmatterToValidate["tags"] as string[],
+      }),
     };
 
     const version: PublishableVersion = {
@@ -131,11 +143,20 @@ export class PublishableService {
     return this.repo.readVersion(handle, meta.current_version);
   }
 
-  async validate(filePath: string): Promise<ValidationResult> {
+  async validate(filePath: string, schema?: string): Promise<ValidationResult> {
+    const resolvedSchema = schema ?? "blog";
+    const schemaJson = await this.repo.readSchemaFile(resolvedSchema);
     const fileContent = await this.repo.readFileContent(filePath);
     const parsed = matter(fileContent);
     const body = parsed.content.trimStart();
-    return this.validator.validate(parsed.data, body);
+    return this.validator.validate(parsed.data, body, schemaJson);
+  }
+
+  async init(): Promise<{ schemas: string[] }> {
+    for (const [name, schemaObj] of Object.entries(DEFAULT_SCHEMAS)) {
+      await this.repo.writeSchemaFile(name, schemaObj);
+    }
+    return { schemas: Object.keys(DEFAULT_SCHEMAS) };
   }
 
   async versions(

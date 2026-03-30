@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import type {
   Handle,
   PublishableMeta,
+  PublishableSchema,
   PublishableVersion,
   VersionFrontmatter,
 } from "../types.js";
@@ -18,6 +19,14 @@ export class LocalFileRepository {
 
   private publishablesDir(): string {
     return join(this.vaultRoot, "publishables");
+  }
+
+  private schemasDir(): string {
+    return join(this.vaultRoot, "schemas");
+  }
+
+  private schemaPath(name: string): string {
+    return join(this.schemasDir(), `${name}.json`);
   }
 
   private publishableDir(handle: Handle): string {
@@ -152,6 +161,44 @@ export class LocalFileRepository {
       throw new PublishableError(
         "FILE_NOT_FOUND",
         `File not found: ${filePath}`,
+      );
+    }
+  }
+
+  async readSchemaFile(name: string): Promise<PublishableSchema> {
+    const path = this.schemaPath(name);
+    let content: string;
+    try {
+      content = await fs.readFile(path, "utf-8");
+    } catch {
+      throw new PublishableError(
+        "SCHEMA_NOT_FOUND",
+        `Schema '${name}' not found. Run 'publishable init' to create default schemas, or add ${name}.json to ${this.schemasDir()}`,
+      );
+    }
+    try {
+      return JSON.parse(content) as PublishableSchema;
+    } catch {
+      throw new PublishableError(
+        "STORAGE_ERROR",
+        `Schema '${name}' contains invalid JSON`,
+      );
+    }
+  }
+
+  async writeSchemaFile(name: string, schema: object): Promise<void> {
+    const dir = this.schemasDir();
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(
+        this.schemaPath(name),
+        JSON.stringify(schema, null, 2),
+        "utf-8",
+      );
+    } catch (err) {
+      throw new PublishableError(
+        "STORAGE_ERROR",
+        `Failed to write schema '${name}': ${String(err)}`,
       );
     }
   }

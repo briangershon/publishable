@@ -33,6 +33,7 @@ describe("PublishableService", () => {
     await fs.mkdir(vaultRoot, { recursive: true });
     process.env["PUBLISHABLE_VAULT"] = vaultRoot;
     svc = new PublishableService();
+    await svc.init();
     tempFile = join(vaultRoot, "input.md");
   });
 

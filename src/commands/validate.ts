@@ -4,12 +4,13 @@ import { outputSuccess, outputError } from "../utils/output.js";
 
 export async function validateCommand(opts: {
   file: string;
+  schema?: string;
   json?: boolean;
 }): Promise<void> {
   const service = new PublishableService();
   const useJson = opts.json ?? false;
   try {
-    const result = await service.validate(opts.file);
+    const result = await service.validate(opts.file, opts.schema);
     // validate exits 0 even on invalid content (dry-run semantics)
     outputSuccess(result, useJson);
   } catch (e) {

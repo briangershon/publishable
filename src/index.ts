@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import pkg from "../package.json" with { type: "json" };
+import { initCommand } from "./commands/init.js";
 import { updateCommand } from "./commands/update.js";
 import { currentCommand } from "./commands/current.js";
 import { validateCommand } from "./commands/validate.js";
@@ -23,24 +24,19 @@ program
 program.addHelpText(
   "after",
   `
-Schema: publishable/v1
-──────────────────────
-Markdown files must include YAML frontmatter with these fields:
+Built-in schemas (run "publishable init" to write these to your vault):
+───────────────────────────────────────────────────────────────────────
+  blog      — title, slug, summary, tags required; body must have heading
+  linkedin  — title, summary (≤3000 chars) required; body required
+  bluesky   — title, summary (≤300 chars) required; body required
+  x         — title, summary (≤280 chars) required; body required
 
-  Required:
-    title    — string, non-empty
-    slug     — lowercase alphanumeric + hyphens (e.g. "my-post-2024")
-    summary  — string, non-empty
-    tags     — list of strings, at least one required
+Custom schemas:
+  Drop any JSON Schema 2020-12 file into {vault}/schemas/<name>.json,
+  then use --schema <name> to validate against it.
 
-  Injected by CLI (do NOT include in input files):
-    version, schema, message, created_at, reverted_from
-
-  Body:
-    Must be non-empty and contain at least one markdown heading (# H1–H6)
-
-Example file (post.md):
-───────────────────────
+Example blog file:
+──────────────────
   ---
   title: "Getting Started with the API"
   slug: getting-started-with-the-api
@@ -52,6 +48,9 @@ Example file (post.md):
   # Getting Started with the API
 
   Your content here...
+
+Fields injected by CLI (do NOT include in input files):
+  version, schema, message, created_at, reverted_from
 
 Handle rules:
   Pattern: ^[a-z][a-z0-9-]*$
@@ -65,18 +64,40 @@ Storage:
 );
 
 program
+  .command("init")
+  .description(
+    "Initialize vault with default schemas (blog, linkedin, bluesky, x)",
+  )
+  .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Writes default JSON Schema files to {vault}/schemas/:
+  blog.json, linkedin.json, bluesky.json, x.json
+
+Safe to re-run — overwrites existing default schemas.
+Custom schemas in the same directory are not affected.
+`,
+  )
+  .action(initCommand);
+
+program
   .command("update <handle>")
   .description("Create or update a publishable from a markdown file")
   .requiredOption("--file <file>", "Path to markdown file")
   .option("--title <title>", "Title (required on first create if not in file)")
   .option("--message <msg>", "Version message")
+  .option("--schema <type>", "Schema name (default: blog)", "blog")
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
 Examples:
-  # Create new (title required on first create if not in frontmatter)
+  # Create new blog post (title required on first create if not in frontmatter)
   publishable update my-post --file post.md --title "My Post"
+
+  # Create a LinkedIn post
+  publishable update my-li-post --file linkedin.md --schema linkedin
 
   # Update existing with a version message
   publishable update my-post --file post.md --message "Fix typos"
@@ -96,14 +117,16 @@ program
 
 program
   .command("validate")
-  .description("Validate a markdown file against publishable/v1 schema")
+  .description("Validate a markdown file against a schema")
   .requiredOption("--file <file>", "Path to markdown file")
+  .option("--schema <type>", "Schema name (default: blog)", "blog")
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
 Examples:
   publishable validate --file post.md
+  publishable validate --file post.md --schema linkedin
   publishable validate --file post.md --json
 
 Note: Always exits 0 — this is a dry-run inspection tool. Only "update" exits
