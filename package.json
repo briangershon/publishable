@@ -15,7 +15,7 @@
     "lint": "oxlint src",
     "check": "npm run lint && tsc --noEmit && prettier --check .",
     "format": "prettier --write .",
-    "dev": "tsx src/index.ts",
+    "dev": "PUBLISHABLE_VAULT=.publishable-vault-dev tsx src/index.ts",
     "start": "node dist/index.js"
   },
   "keywords": [
