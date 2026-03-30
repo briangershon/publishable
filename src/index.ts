@@ -20,6 +20,50 @@ program
   .version(pkg.version)
   .showHelpAfterError();
 
+program.addHelpText(
+  "after",
+  `
+Schema: publishable/v1
+──────────────────────
+Markdown files must include YAML frontmatter with these fields:
+
+  Required:
+    title    — string, non-empty
+    slug     — lowercase alphanumeric + hyphens (e.g. "my-post-2024")
+    summary  — string, non-empty
+    tags     — list of strings, at least one required
+
+  Injected by CLI (do NOT include in input files):
+    version, schema, message, created_at, reverted_from
+
+  Body:
+    Must be non-empty and contain at least one markdown heading (# H1–H6)
+
+Example file (post.md):
+───────────────────────
+  ---
+  title: "Getting Started with the API"
+  slug: getting-started-with-the-api
+  summary: "A practical introduction to the API for new users."
+  tags:
+    - api
+    - tutorial
+  ---
+  # Getting Started with the API
+
+  Your content here...
+
+Handle rules:
+  Pattern: ^[a-z][a-z0-9-]*$
+  Valid:   my-post, api-guide-2024
+  Invalid: My-Post, my_post, 2024-guide
+
+Storage:
+  Default vault: ~/.publishable-vault/
+  Override:      PUBLISHABLE_VAULT=/path/to/vault publishable <command>
+`,
+);
+
 program
   .command("update <handle>")
   .description("Create or update a publishable from a markdown file")
@@ -27,6 +71,20 @@ program
   .option("--title <title>", "Title (required on first create if not in file)")
   .option("--message <msg>", "Version message")
   .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  # Create new (title required on first create if not in frontmatter)
+  publishable update my-post --file post.md --title "My Post"
+
+  # Update existing with a version message
+  publishable update my-post --file post.md --message "Fix typos"
+
+  # With custom vault path
+  PUBLISHABLE_VAULT=/tmp/test-vault publishable update my-post --file post.md
+`,
+  )
   .action(updateCommand);
 
 program
@@ -41,6 +99,17 @@ program
   .description("Validate a markdown file against publishable/v1 schema")
   .requiredOption("--file <file>", "Path to markdown file")
   .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  publishable validate --file post.md
+  publishable validate --file post.md --json
+
+Note: Always exits 0 — this is a dry-run inspection tool. Only "update" exits
+      non-zero on invalid content.
+`,
+  )
   .action(validateCommand);
 
 program
