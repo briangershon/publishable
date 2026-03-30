@@ -13,7 +13,8 @@
     "prepublishOnly": "npm run build",
     "build": "tsc && chmod +x dist/index.js",
     "lint": "oxlint src",
-    "check": "npm run lint && tsc --noEmit",
+    "check": "npm run lint && tsc --noEmit && prettier --check .",
+    "format": "prettier --write .",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js"
   },
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "oxlint": "latest",
+    "prettier": "^3.8.1",
     "tsx": "^4.21.0",
     "typescript": "^5.8.0"
   },

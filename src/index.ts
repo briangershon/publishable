@@ -14,7 +14,9 @@ const program = new Command();
 
 program
   .name("publishable")
-  .description("A tool for agents to manage blog and other publishable content.")
+  .description(
+    "A tool for agents to manage blog and other publishable content.",
+  )
   .version(pkg.version)
   .showHelpAfterError();
 

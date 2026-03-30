@@ -70,7 +70,10 @@ export class LocalFileRepository {
     }
   }
 
-  async readVersion(handle: Handle, version: number): Promise<PublishableVersion> {
+  async readVersion(
+    handle: Handle,
+    version: number,
+  ): Promise<PublishableVersion> {
     const path = this.versionPath(handle, version);
     let content: string;
     try {
@@ -88,7 +91,10 @@ export class LocalFileRepository {
     };
   }
 
-  async writeVersion(handle: Handle, version: PublishableVersion): Promise<void> {
+  async writeVersion(
+    handle: Handle,
+    version: PublishableVersion,
+  ): Promise<void> {
     const path = this.versionPath(handle, version.frontmatter.version);
     try {
       const content = matter.stringify(version.body, version.frontmatter);

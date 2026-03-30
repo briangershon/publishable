@@ -23,7 +23,10 @@ export class ValidationService {
     if (!result.success) {
       for (const issue of result.error.issues) {
         errors.push({
-          path: issue.path.length > 0 ? issue.path.join(".") : issue.path[0]?.toString() ?? "frontmatter",
+          path:
+            issue.path.length > 0
+              ? issue.path.join(".")
+              : (issue.path[0]?.toString() ?? "frontmatter"),
           code: issue.code.toUpperCase(),
           message: issue.message,
         });

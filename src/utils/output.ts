@@ -61,8 +61,7 @@ function printHuman(data: unknown): void {
     console.log(`slug:    ${fm.slug}`);
     console.log(`schema:  ${fm.schema}`);
     if (fm.message) console.log(`message: ${fm.message}`);
-    if (fm.reverted_from)
-      console.log(`reverted_from: ${fm.reverted_from}`);
+    if (fm.reverted_from) console.log(`reverted_from: ${fm.reverted_from}`);
     console.log(`\n${obj.body}`);
     return;
   }
