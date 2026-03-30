@@ -1,0 +1,230 @@
+import { homedir } from "os";
+import { join } from "path";
+import matter from "gray-matter";
+import { LocalFileRepository } from "../repositories/LocalFileRepository.js";
+import { ValidationService } from "./ValidationService.js";
+import { PublishableError } from "../utils/errors.js";
+import type {
+  Handle,
+  PublishableMeta,
+  PublishableSummary,
+  PublishableVersion,
+  ValidationResult,
+  VersionFrontmatter,
+} from "../types.js";
+
+const HANDLE_REGEX = /^[a-z][a-z0-9-]*$/;
+
+export class PublishableService {
+  private readonly repo: LocalFileRepository;
+  private readonly validator: ValidationService;
+
+  constructor() {
+    const vaultRoot =
+      process.env["PUBLISHABLE_VAULT"] ?? join(homedir(), ".publishable-vault");
+    this.repo = new LocalFileRepository(vaultRoot);
+    this.validator = new ValidationService();
+  }
+
+  private assertValidHandle(handle: string): void {
+    if (!HANDLE_REGEX.test(handle)) {
+      throw new PublishableError(
+        "INVALID_HANDLE",
+        `Invalid handle '${handle}'. Handles must match ^[a-z][a-z0-9-]*$`,
+      );
+    }
+  }
+
+  async update(
+    handle: string,
+    filePath: string,
+    opts: { title?: string; message?: string },
+  ): Promise<PublishableSummary> {
+    this.assertValidHandle(handle);
+
+    const fileContent = await this.repo.readFileContent(filePath);
+    const parsed = matter(fileContent);
+    const fileFrontmatter = parsed.data as Record<string, unknown>;
+    const body = parsed.content.trimStart();
+
+    // Title resolution: --title flag overrides file frontmatter
+    const resolvedTitle =
+      opts.title ?? (fileFrontmatter["title"] as string | undefined);
+
+    // Build frontmatter for validation (exclude version-specific fields)
+    const frontmatterToValidate = { ...fileFrontmatter };
+    if (resolvedTitle) frontmatterToValidate["title"] = resolvedTitle;
+
+    const validation = this.validator.validate(frontmatterToValidate, body);
+    if (!validation.valid) {
+      throw new PublishableError(
+        "SCHEMA_VALIDATION_FAILED",
+        "Publishable content failed validation",
+        validation.errors,
+      );
+    }
+
+    const now = new Date().toISOString();
+    const isNew = !(await this.repo.exists(handle));
+
+    if (isNew && !resolvedTitle) {
+      throw new PublishableError(
+        "TITLE_REQUIRED_ON_CREATE",
+        "A --title is required when creating a new publishable (or include title in file frontmatter)",
+      );
+    }
+
+    let newVersionNumber: number;
+    let meta: PublishableMeta;
+
+    if (isNew) {
+      newVersionNumber = 1;
+      meta = {
+        handle,
+        title: resolvedTitle!,
+        current_version: 1,
+        created_at: now,
+        updated_at: now,
+      };
+    } else {
+      meta = await this.repo.readMeta(handle);
+      newVersionNumber = meta.current_version + 1;
+      meta = {
+        ...meta,
+        current_version: newVersionNumber,
+        updated_at: now,
+      };
+      if (opts.title) meta.title = opts.title;
+    }
+
+    const versionFrontmatter: VersionFrontmatter = {
+      version: newVersionNumber,
+      schema: "publishable/v1",
+      message: opts.message ?? "",
+      created_at: now,
+      title: resolvedTitle ?? meta.title,
+      slug: frontmatterToValidate["slug"] as string,
+      summary: frontmatterToValidate["summary"] as string,
+      tags: frontmatterToValidate["tags"] as string[],
+    };
+
+    const version: PublishableVersion = {
+      frontmatter: versionFrontmatter,
+      body,
+    };
+
+    await this.repo.writeMeta(meta);
+    await this.repo.writeVersion(handle, version);
+
+    return {
+      handle: meta.handle,
+      title: meta.title,
+      current_version: meta.current_version,
+      created_at: meta.created_at,
+      updated_at: meta.updated_at,
+    };
+  }
+
+  async current(handle: string): Promise<PublishableVersion> {
+    this.assertValidHandle(handle);
+    const meta = await this.repo.readMeta(handle);
+    return this.repo.readVersion(handle, meta.current_version);
+  }
+
+  async validate(filePath: string): Promise<ValidationResult> {
+    const fileContent = await this.repo.readFileContent(filePath);
+    const parsed = matter(fileContent);
+    const body = parsed.content.trimStart();
+    return this.validator.validate(parsed.data, body);
+  }
+
+  async versions(
+    handle: string,
+  ): Promise<{ handle: Handle; versions: number[]; current_version: number }> {
+    this.assertValidHandle(handle);
+    const meta = await this.repo.readMeta(handle);
+    const versions = await this.repo.listVersionNumbers(handle);
+    return { handle, versions, current_version: meta.current_version };
+  }
+
+  async show(handle: string, version: number): Promise<PublishableVersion> {
+    this.assertValidHandle(handle);
+    await this.repo.readMeta(handle); // ensure publishable exists
+    return this.repo.readVersion(handle, version);
+  }
+
+  async revert(
+    handle: string,
+    targetVersion: number,
+    opts: { message?: string },
+  ): Promise<PublishableSummary> {
+    this.assertValidHandle(handle);
+    const meta = await this.repo.readMeta(handle);
+    const oldVersion = await this.repo.readVersion(handle, targetVersion);
+
+    const now = new Date().toISOString();
+    const newVersionNumber = meta.current_version + 1;
+
+    const newVersionFrontmatter: VersionFrontmatter = {
+      ...oldVersion.frontmatter,
+      version: newVersionNumber,
+      created_at: now,
+      message: opts.message ?? `Revert to v${targetVersion}`,
+      reverted_from: targetVersion,
+    };
+
+    const newVersion: PublishableVersion = {
+      frontmatter: newVersionFrontmatter,
+      body: oldVersion.body,
+    };
+
+    const updatedMeta: PublishableMeta = {
+      ...meta,
+      current_version: newVersionNumber,
+      updated_at: now,
+    };
+
+    await this.repo.writeVersion(handle, newVersion);
+    await this.repo.writeMeta(updatedMeta);
+
+    return {
+      handle: updatedMeta.handle,
+      title: updatedMeta.title,
+      current_version: updatedMeta.current_version,
+      created_at: updatedMeta.created_at,
+      updated_at: updatedMeta.updated_at,
+    };
+  }
+
+  async list(): Promise<PublishableSummary[]> {
+    const handles = await this.repo.listHandles();
+    const summaries: PublishableSummary[] = [];
+    for (const handle of handles) {
+      const meta = await this.repo.readMeta(handle);
+      summaries.push({
+        handle: meta.handle,
+        title: meta.title,
+        current_version: meta.current_version,
+        created_at: meta.created_at,
+        updated_at: meta.updated_at,
+      });
+    }
+    return summaries;
+  }
+
+  async get(handle: string): Promise<PublishableSummary> {
+    this.assertValidHandle(handle);
+    const meta = await this.repo.readMeta(handle);
+    return {
+      handle: meta.handle,
+      title: meta.title,
+      current_version: meta.current_version,
+      created_at: meta.created_at,
+      updated_at: meta.updated_at,
+    };
+  }
+
+  async serializeVersion(version: PublishableVersion): Promise<string> {
+    return matter.stringify(version.body, version.frontmatter);
+  }
+}
