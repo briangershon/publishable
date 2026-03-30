@@ -25,7 +25,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/briangershon/publishable"
+    "url": "git+https://github.com/briangershon/publishable.git"
   },
   "engines": {
     "node": ">=v22.22.2"
