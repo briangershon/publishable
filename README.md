@@ -32,7 +32,12 @@ After merging latest code to main branch:
 
 A GitHub release is automatically written and published to NPM.
 
-**First-time setup:** Add `NPM_TOKEN` and `OPENROUTER_API_KEY` secrets in GitHub repo Settings → Secrets and variables → Actions. Also run `npm login` locally and ensure you have access to the `@briangershon` scope.
+**First-time setup:**
+
+1. Add `OPENROUTER_API_KEY` secret in GitHub repo Settings → Secrets and variables → Actions.
+2. Run `npm login` locally and ensure you have access to the `@briangershon` scope.
+3. Manually publish the package once to establish it on npm: `npm publish --access public`
+4. Set up [npm Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) in your npm package settings to allow the GitHub Actions workflow to publish without a stored token.
 
 ## License
 
