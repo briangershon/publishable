@@ -26,13 +26,11 @@ Body content here.
 describe("PublishableService", () => {
   let vaultRoot: string;
   let svc: PublishableService;
-  let tempFile: string;
 
   beforeEach(async () => {
     vaultRoot = makeTempDir();
     svc = new PublishableService(vaultRoot);
     await svc.init();
-    tempFile = join(vaultRoot, "input.md");
   });
 
   describe("vault not initialized", () => {
@@ -50,44 +48,37 @@ describe("PublishableService", () => {
 
   describe("update()", () => {
     it("creates a new publishable at version 1", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      const result = await svc.update("my-post", tempFile, {});
+      const result = await svc.update("my-post", validMarkdown, {});
       expect(result.handle).toBe("my-post");
       expect(result.current_version).toBe(1);
       expect(result.title).toBe("My Post");
     });
 
     it("increments version on second update", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
-      const result = await svc.update("my-post", tempFile, {
+      await svc.update("my-post", validMarkdown, {});
+      const result = await svc.update("my-post", validMarkdown, {
         message: "second update",
       });
       expect(result.current_version).toBe(2);
     });
 
     it("--title flag overrides file frontmatter title", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      const result = await svc.update("my-post", tempFile, {
+      const result = await svc.update("my-post", validMarkdown, {
         title: "Override Title",
       });
       expect(result.title).toBe("Override Title");
     });
 
     it("throws INVALID_HANDLE for bad handle", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
       await expect(
-        svc.update("Bad_Handle", tempFile, {}),
+        svc.update("Bad_Handle", validMarkdown, {}),
       ).rejects.toMatchObject({ code: "INVALID_HANDLE" });
     });
 
     it("throws SCHEMA_VALIDATION_FAILED for invalid content", async () => {
-      await fs.writeFile(
-        tempFile,
-        "---\ntitle: Test\n---\nNo heading here",
-        "utf-8",
-      );
-      await expect(svc.update("my-post", tempFile, {})).rejects.toMatchObject({
+      await expect(
+        svc.update("my-post", "---\ntitle: Test\n---\nNo heading here", {}),
+      ).rejects.toMatchObject({
         code: "SCHEMA_VALIDATION_FAILED",
       });
     });
@@ -103,16 +94,9 @@ tags:
 
 Body content.
 `;
-      await fs.writeFile(tempFile, noTitle, "utf-8");
-      await expect(svc.update("my-post", tempFile, {})).rejects.toMatchObject({
+      await expect(svc.update("my-post", noTitle, {})).rejects.toMatchObject({
         code: "SCHEMA_VALIDATION_FAILED",
       });
-    });
-
-    it("throws FILE_NOT_FOUND for missing file", async () => {
-      await expect(
-        svc.update("my-post", join(vaultRoot, "missing.md"), {}),
-      ).rejects.toMatchObject({ code: "FILE_NOT_FOUND" });
     });
   });
 
@@ -122,9 +106,8 @@ Body content.
     });
 
     it("returns summaries for all publishables", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("post-a", tempFile, {});
-      await svc.update("post-b", tempFile, {});
+      await svc.update("post-a", validMarkdown, {});
+      await svc.update("post-b", validMarkdown, {});
       const list = await svc.list();
       expect(list.map((s) => s.handle).sort()).toEqual(["post-a", "post-b"]);
     });
@@ -132,8 +115,7 @@ Body content.
 
   describe("get()", () => {
     it("returns summary for existing publishable", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
+      await svc.update("my-post", validMarkdown, {});
       const summary = await svc.get("my-post");
       expect(summary.handle).toBe("my-post");
       expect(summary.current_version).toBe(1);
@@ -148,17 +130,15 @@ Body content.
 
   describe("current()", () => {
     it("returns the latest version", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
+      await svc.update("my-post", validMarkdown, {});
       const version = await svc.current("my-post");
       expect(version.frontmatter.version).toBe(1);
       expect(version.frontmatter.title).toBe("My Post");
     });
 
     it("returns version 2 after two updates", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
-      await svc.update("my-post", tempFile, {});
+      await svc.update("my-post", validMarkdown, {});
+      await svc.update("my-post", validMarkdown, {});
       const version = await svc.current("my-post");
       expect(version.frontmatter.version).toBe(2);
     });
@@ -166,16 +146,14 @@ Body content.
 
   describe("show()", () => {
     it("returns specific version", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
-      await svc.update("my-post", tempFile, { message: "v2" });
+      await svc.update("my-post", validMarkdown, {});
+      await svc.update("my-post", validMarkdown, { message: "v2" });
       const v1 = await svc.show("my-post", 1);
       expect(v1.frontmatter.version).toBe(1);
     });
 
     it("throws VERSION_NOT_FOUND for missing version", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
+      await svc.update("my-post", validMarkdown, {});
       await expect(svc.show("my-post", 99)).rejects.toMatchObject({
         code: "VERSION_NOT_FOUND",
       });
@@ -184,9 +162,8 @@ Body content.
 
   describe("versions()", () => {
     it("returns all version numbers", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
-      await svc.update("my-post", tempFile, {});
+      await svc.update("my-post", validMarkdown, {});
+      await svc.update("my-post", validMarkdown, {});
       const result = await svc.versions("my-post");
       expect(result.versions).toEqual([1, 2]);
       expect(result.current_version).toBe(2);
@@ -195,15 +172,12 @@ Body content.
 
   describe("revert()", () => {
     it("creates a new version with reverted_from set", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
-
+      await svc.update("my-post", validMarkdown, {});
       const updatedMarkdown = validMarkdown.replace(
         "Body content here.",
         "Updated body.",
       );
-      await fs.writeFile(tempFile, updatedMarkdown, "utf-8");
-      await svc.update("my-post", tempFile, {});
+      await svc.update("my-post", updatedMarkdown, {});
 
       const result = await svc.revert("my-post", 1, {});
       expect(result.current_version).toBe(3);
@@ -214,19 +188,15 @@ Body content.
   });
 
   describe("validate()", () => {
-    it("returns valid for correct file", async () => {
-      await fs.writeFile(tempFile, validMarkdown, "utf-8");
-      const result = await svc.validate(tempFile);
+    it("returns valid for correct content", async () => {
+      const result = await svc.validate(validMarkdown);
       expect(result.valid).toBe(true);
     });
 
-    it("returns invalid without throwing for bad file", async () => {
-      await fs.writeFile(
-        tempFile,
+    it("returns invalid without throwing for bad content", async () => {
+      const result = await svc.validate(
         "---\ntitle: Test\n---\nno heading here",
-        "utf-8",
       );
-      const result = await svc.validate(tempFile);
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });

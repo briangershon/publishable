@@ -3,6 +3,7 @@ import { join } from "path";
 import { readConfigSync, CONFIG_PATH } from "../utils/config.js";
 import matter from "gray-matter";
 import { LocalFileRepository } from "../repositories/LocalFileRepository.js";
+import type { IPublishableRepository } from "../repositories/IPublishableRepository.js";
 import { ValidationService } from "./ValidationService.js";
 import { PublishableError } from "../utils/errors.js";
 import { DEFAULT_SCHEMAS } from "../schemas/defaults.js";
@@ -18,14 +19,18 @@ import type {
 const HANDLE_REGEX = /^[a-z][a-z0-9-]*$/;
 
 export class PublishableService {
-  private readonly repo: LocalFileRepository;
+  private readonly repo: IPublishableRepository;
   private readonly validator: ValidationService;
 
-  constructor(vaultRoot?: string) {
-    const config = readConfigSync(CONFIG_PATH);
-    const resolvedRoot =
-      vaultRoot ?? config.vault ?? join(homedir(), ".publishable", "vault");
-    this.repo = new LocalFileRepository(resolvedRoot);
+  constructor(vaultRoot?: string, repo?: IPublishableRepository) {
+    if (repo) {
+      this.repo = repo;
+    } else {
+      const config = readConfigSync(CONFIG_PATH);
+      const resolvedRoot =
+        vaultRoot ?? config.vault ?? join(homedir(), ".publishable", "vault");
+      this.repo = new LocalFileRepository(resolvedRoot);
+    }
     this.validator = new ValidationService();
   }
 
@@ -49,7 +54,7 @@ export class PublishableService {
 
   async update(
     handle: string,
-    filePath: string,
+    fileContent: string,
     opts: { title?: string; message?: string; schema?: string },
   ): Promise<PublishableSummary> {
     await this.assertVaultInitialized();
@@ -58,7 +63,6 @@ export class PublishableService {
     const resolvedSchema = opts.schema ?? "blog";
     const schemaJson = await this.repo.readSchemaFile(resolvedSchema);
 
-    const fileContent = await this.repo.readFileContent(filePath);
     const parsed = matter(fileContent);
     const fileFrontmatter = parsed.data as Record<string, unknown>;
     const body = parsed.content.trimStart();
@@ -156,11 +160,13 @@ export class PublishableService {
     return this.repo.readVersion(handle, meta.current_version);
   }
 
-  async validate(filePath: string, schema?: string): Promise<ValidationResult> {
+  async validate(
+    fileContent: string,
+    schema?: string,
+  ): Promise<ValidationResult> {
     await this.assertVaultInitialized();
     const resolvedSchema = schema ?? "blog";
     const schemaJson = await this.repo.readSchemaFile(resolvedSchema);
-    const fileContent = await this.repo.readFileContent(filePath);
     const parsed = matter(fileContent);
     const body = parsed.content.trimStart();
     return this.validator.validate(parsed.data, body, schemaJson);
