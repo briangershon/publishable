@@ -8,6 +8,7 @@ import { ValidationService } from "./ValidationService.js";
 import { PublishableError } from "../utils/errors.js";
 import { DEFAULT_SCHEMAS } from "../schemas/defaults.js";
 import type {
+  ErrorCode,
   Handle,
   PublishableMeta,
   PublishableSchema,
@@ -74,18 +75,12 @@ export class PublishableService {
   }
 
   private async readMeta(handle: Handle): Promise<PublishableMeta> {
-    const path = this.metaPath(handle);
-    let content: string;
-    try {
-      content = await this.fs.readFile(path, "utf-8");
-    } catch {
-      throw new PublishableError(
-        "PUBLISHABLE_NOT_FOUND",
-        `Publishable '${handle}' not found`,
-      );
-    }
-    const parsed = matter(content);
-    return parsed.data as PublishableMeta;
+    const content = await this.readFileOrThrow(
+      this.metaPath(handle),
+      "PUBLISHABLE_NOT_FOUND",
+      `Publishable '${handle}' not found`,
+    );
+    return matter(content).data as PublishableMeta;
   }
 
   private async writeMeta(meta: PublishableMeta): Promise<void> {
@@ -106,16 +101,11 @@ export class PublishableService {
     handle: Handle,
     version: number,
   ): Promise<PublishableVersion> {
-    const path = this.versionPath(handle, version);
-    let content: string;
-    try {
-      content = await this.fs.readFile(path, "utf-8");
-    } catch {
-      throw new PublishableError(
-        "VERSION_NOT_FOUND",
-        `Version ${version} of '${handle}' not found`,
-      );
-    }
+    const content = await this.readFileOrThrow(
+      this.versionPath(handle, version),
+      "VERSION_NOT_FOUND",
+      `Version ${version} of '${handle}' not found`,
+    );
     const parsed = matter(content);
     return {
       frontmatter: parsed.data as VersionFrontmatter,
@@ -178,16 +168,11 @@ export class PublishableService {
   }
 
   private async readSchemaFile(name: string): Promise<PublishableSchema> {
-    const path = this.schemaPath(name);
-    let content: string;
-    try {
-      content = await this.fs.readFile(path, "utf-8");
-    } catch {
-      throw new PublishableError(
-        "SCHEMA_NOT_FOUND",
-        `Schema '${name}' not found. Run 'publishable init' to create default schemas, or add ${name}.json to ${this.schemasDir()}`,
-      );
-    }
+    const content = await this.readFileOrThrow(
+      this.schemaPath(name),
+      "SCHEMA_NOT_FOUND",
+      `Schema '${name}' not found. Run 'publishable init' to create default schemas, or add ${name}.json to ${this.schemasDir()}`,
+    );
     try {
       return JSON.parse(content) as PublishableSchema;
     } catch {
@@ -212,6 +197,30 @@ export class PublishableService {
         "STORAGE_ERROR",
         `Failed to write schema '${name}': ${String(err)}`,
       );
+    }
+  }
+
+  // --- Helpers ---
+
+  private metaToSummary(meta: PublishableMeta): PublishableSummary {
+    return {
+      handle: meta.handle,
+      title: meta.title,
+      current_version: meta.current_version,
+      created_at: meta.created_at,
+      updated_at: meta.updated_at,
+    };
+  }
+
+  private async readFileOrThrow(
+    path: string,
+    code: ErrorCode,
+    message: string,
+  ): Promise<string> {
+    try {
+      return await this.fs.readFile(path, "utf-8");
+    } catch {
+      throw new PublishableError(code, message);
     }
   }
 
@@ -255,8 +264,10 @@ export class PublishableService {
       opts.title ?? (fileFrontmatter["title"] as string | undefined);
 
     // Build frontmatter for validation (exclude version-specific fields)
-    const frontmatterToValidate = { ...fileFrontmatter };
-    if (resolvedTitle) frontmatterToValidate["title"] = resolvedTitle;
+    const frontmatterToValidate: Record<string, unknown> = {
+      ...fileFrontmatter,
+      ...(resolvedTitle && { title: resolvedTitle }),
+    };
 
     const validation = this.validator.validate(
       frontmatterToValidate,
@@ -338,13 +349,7 @@ export class PublishableService {
     await this.writeMeta(meta);
     await this.writeVersion(handle, version);
 
-    return {
-      handle: meta.handle,
-      title: meta.title,
-      current_version: meta.current_version,
-      created_at: meta.created_at,
-      updated_at: meta.updated_at,
-    };
+    return this.metaToSummary(meta);
   }
 
   async current(handle: string): Promise<PublishableVersion> {
@@ -436,13 +441,7 @@ export class PublishableService {
     await this.writeVersion(handle, newVersion);
     await this.writeMeta(updatedMeta);
 
-    return {
-      handle: updatedMeta.handle,
-      title: updatedMeta.title,
-      current_version: updatedMeta.current_version,
-      created_at: updatedMeta.created_at,
-      updated_at: updatedMeta.updated_at,
-    };
+    return this.metaToSummary(updatedMeta);
   }
 
   async list(): Promise<PublishableSummary[]> {
@@ -451,13 +450,7 @@ export class PublishableService {
     const summaries: PublishableSummary[] = [];
     for (const handle of handles) {
       const meta = await this.readMeta(handle);
-      summaries.push({
-        handle: meta.handle,
-        title: meta.title,
-        current_version: meta.current_version,
-        created_at: meta.created_at,
-        updated_at: meta.updated_at,
-      });
+      summaries.push(this.metaToSummary(meta));
     }
     return summaries;
   }
@@ -466,13 +459,7 @@ export class PublishableService {
     await this.assertVaultInitialized();
     this.assertValidHandle(handle);
     const meta = await this.readMeta(handle);
-    return {
-      handle: meta.handle,
-      title: meta.title,
-      current_version: meta.current_version,
-      created_at: meta.created_at,
-      updated_at: meta.updated_at,
-    };
+    return this.metaToSummary(meta);
   }
 
   async serializeVersion(version: PublishableVersion): Promise<string> {
