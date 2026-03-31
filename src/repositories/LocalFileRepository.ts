@@ -9,9 +9,9 @@ import type {
   VersionFrontmatter,
 } from "../types.js";
 import { PublishableError } from "../utils/errors.js";
-import type { IPublishableRepository } from "./IPublishableRepository.js";
+import type { IRepository } from "./IRepository.js";
 
-export class LocalFileRepository implements IPublishableRepository {
+export class LocalFileRepository implements IRepository {
   private readonly vaultRoot: string;
 
   constructor(vaultRoot: string) {

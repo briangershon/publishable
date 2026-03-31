@@ -5,7 +5,7 @@ import type {
   PublishableVersion,
 } from "../types.js";
 
-export interface IPublishableRepository {
+export interface IRepository {
   // Vault lifecycle
   vaultExists(): Promise<boolean>;
   ensureVaultDir(): Promise<void>;

@@ -81,17 +81,17 @@ Examples of valid handles: `my-post`, `phase-0-spec`, `api-guide-2024`
 
 ## Architecture Layers
 
-| Layer            | Location                                  | Responsibility                         |
-| ---------------- | ----------------------------------------- | -------------------------------------- |
-| Schema definitions | `src/schemas/defaults.ts`               | Built-in JSON schemas for blog, linkedin, bluesky, x |
-| CLI wiring       | `src/index.ts`                            | Register commander commands            |
-| Command handlers | `src/commands/*.ts`                       | Thin: call service, call output helper |
-| Business logic   | `src/services/PublishableService.ts`      | Orchestrate validation + storage       |
-| Validation       | `src/services/ValidationService.ts`       | Returns result, never throws           |
-| Storage          | `src/repositories/LocalFileRepository.ts` | All fs I/O, uses gray-matter           |
-| Types            | `src/types.ts`                            | Shared TypeScript interfaces           |
-| Errors           | `src/utils/errors.ts`                     | `PublishableError` class               |
-| Output           | `src/utils/output.ts`                     | Human-readable and JSON output         |
+| Layer              | Location                                  | Responsibility                                       |
+| ------------------ | ----------------------------------------- | ---------------------------------------------------- |
+| Schema definitions | `src/schemas/defaults.ts`                 | Built-in JSON schemas for blog, linkedin, bluesky, x |
+| CLI wiring         | `src/index.ts`                            | Register commander commands                          |
+| Command handlers   | `src/commands/*.ts`                       | Thin: call service, call output helper               |
+| Business logic     | `src/services/PublishableService.ts`      | Orchestrate validation + storage                     |
+| Validation         | `src/services/ValidationService.ts`       | Returns result, never throws                         |
+| Storage            | `src/repositories/LocalFileRepository.ts` | All fs I/O, uses gray-matter                         |
+| Types              | `src/types.ts`                            | Shared TypeScript interfaces                         |
+| Errors             | `src/utils/errors.ts`                     | `PublishableError` class                             |
+| Output             | `src/utils/output.ts`                     | Human-readable and JSON output                       |
 
 ## Tests
 

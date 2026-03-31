@@ -3,7 +3,7 @@ import { join } from "path";
 import { readConfigSync, CONFIG_PATH } from "../utils/config.js";
 import matter from "gray-matter";
 import { LocalFileRepository } from "../repositories/LocalFileRepository.js";
-import type { IPublishableRepository } from "../repositories/IPublishableRepository.js";
+import type { IRepository } from "../repositories/IRepository.js";
 import { ValidationService } from "./ValidationService.js";
 import { PublishableError } from "../utils/errors.js";
 import { DEFAULT_SCHEMAS } from "../schemas/defaults.js";
@@ -19,10 +19,10 @@ import type {
 const HANDLE_REGEX = /^[a-z][a-z0-9-]*$/;
 
 export class PublishableService {
-  private readonly repo: IPublishableRepository;
+  private readonly repo: IRepository;
   private readonly validator: ValidationService;
 
-  constructor(vaultRoot?: string, repo?: IPublishableRepository) {
+  constructor(vaultRoot?: string, repo?: IRepository) {
     if (repo) {
       this.repo = repo;
     } else {
