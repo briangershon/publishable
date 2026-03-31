@@ -10,15 +10,19 @@ The binary is `publishable`. Always use `publishable` in code, docs, and tests.
 
 ## Storage Root
 
-Default vault: `~/.publishable-vault/`
+Default vault: `~/.publishable/vault/`
 
-Override with the `PUBLISHABLE_VAULT` environment variable:
+Config file: `~/.publishable/config.json` — set once with:
 
 ```bash
-PUBLISHABLE_VAULT=/tmp/test-vault publishable update my-post --file draft.md --title "My Post"
+publishable init --vault /path/to/vault
 ```
 
-Use this env var in all testing and scripting to avoid polluting the real vault.
+In tests, pass the vault root directly to the constructor to avoid polluting the real vault:
+
+```typescript
+const svc = new PublishableService("/tmp/test-vault");
+```
 
 ## File Format
 

@@ -1,5 +1,6 @@
 import { homedir } from "os";
 import { join } from "path";
+import { readConfigSync, CONFIG_PATH } from "../utils/config.js";
 import matter from "gray-matter";
 import { LocalFileRepository } from "../repositories/LocalFileRepository.js";
 import { ValidationService } from "./ValidationService.js";
@@ -20,10 +21,11 @@ export class PublishableService {
   private readonly repo: LocalFileRepository;
   private readonly validator: ValidationService;
 
-  constructor() {
-    const vaultRoot =
-      process.env["PUBLISHABLE_VAULT"] ?? join(homedir(), ".publishable-vault");
-    this.repo = new LocalFileRepository(vaultRoot);
+  constructor(vaultRoot?: string) {
+    const config = readConfigSync(CONFIG_PATH);
+    const resolvedRoot =
+      vaultRoot ?? config.vault ?? join(homedir(), ".publishable", "vault");
+    this.repo = new LocalFileRepository(resolvedRoot);
     this.validator = new ValidationService();
   }
 
@@ -152,11 +154,16 @@ export class PublishableService {
     return this.validator.validate(parsed.data, body, schemaJson);
   }
 
-  async init(): Promise<{ schemas: string[] }> {
+  async init(): Promise<{ schemas: string[]; created: string[] }> {
+    await this.repo.ensureVaultDir();
+    const created: string[] = [];
     for (const [name, schemaObj] of Object.entries(DEFAULT_SCHEMAS)) {
-      await this.repo.writeSchemaFile(name, schemaObj);
+      if (!(await this.repo.schemaFileExists(name))) {
+        await this.repo.writeSchemaFile(name, schemaObj);
+        created.push(name);
+      }
     }
-    return { schemas: Object.keys(DEFAULT_SCHEMAS) };
+    return { schemas: Object.keys(DEFAULT_SCHEMAS), created };
   }
 
   async versions(

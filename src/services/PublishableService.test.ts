@@ -30,15 +30,12 @@ describe("PublishableService", () => {
 
   beforeEach(async () => {
     vaultRoot = makeTempDir();
-    await fs.mkdir(vaultRoot, { recursive: true });
-    process.env["PUBLISHABLE_VAULT"] = vaultRoot;
-    svc = new PublishableService();
+    svc = new PublishableService(vaultRoot);
     await svc.init();
     tempFile = join(vaultRoot, "input.md");
   });
 
   afterEach(async () => {
-    delete process.env["PUBLISHABLE_VAULT"];
     await fs.rm(vaultRoot, { recursive: true, force: true });
   });
 

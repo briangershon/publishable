@@ -58,25 +58,28 @@ Handle rules:
   Invalid: My-Post, my_post, 2024-guide
 
 Storage:
-  Default vault: ~/.publishable-vault/
-  Override:      PUBLISHABLE_VAULT=/path/to/vault publishable <command>
+  Default vault: ~/.publishable/vault/
+  Config file:   ~/.publishable/config.json
+  Set vault:     publishable init --vault <path>
 `,
 );
 
 program
   .command("init")
-  .description(
-    "Initialize vault with default schemas (blog, linkedin, bluesky, x)",
+  .description("Set up your publishable vault and install default schemas")
+  .option(
+    "--vault <path>",
+    "Path to vault directory (saved to ~/.publishable/config.json)",
   )
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
-Writes default JSON Schema files to {vault}/schemas/:
+Run this first to set up your publishable vault. Creates the vault directory
+and installs default JSON Schema files into {vault}/schemas/:
   blog.json, linkedin.json, bluesky.json, x.json
 
-Safe to re-run — overwrites existing default schemas.
-Custom schemas in the same directory are not affected.
+Safe to re-run — already-existing schemas are not overwritten.
 `,
   )
   .action(initCommand);
@@ -101,9 +104,6 @@ Examples:
 
   # Update existing with a version message
   publishable update my-post --file post.md --message "Fix typos"
-
-  # With custom vault path
-  PUBLISHABLE_VAULT=/tmp/test-vault publishable update my-post --file post.md
 `,
   )
   .action(updateCommand);

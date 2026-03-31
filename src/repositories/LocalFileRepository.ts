@@ -41,6 +41,19 @@ export class LocalFileRepository {
     return join(this.publishableDir(handle), `v${version}.md`);
   }
 
+  async ensureVaultDir(): Promise<void> {
+    await fs.mkdir(this.vaultRoot, { recursive: true });
+  }
+
+  async schemaFileExists(name: string): Promise<boolean> {
+    try {
+      await fs.access(this.schemaPath(name));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async exists(handle: Handle): Promise<boolean> {
     try {
       await fs.access(this.publishableDir(handle));
