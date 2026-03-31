@@ -31,7 +31,7 @@ Version files (`vN.md`) use a single frontmatter block containing both version m
 ```
 ---
 version: 2
-schema: publishable/v1
+schema: blog/v1
 message: "Improve intro"
 created_at: 2026-03-29T18:20:00Z
 title: "My Post Title"
@@ -48,9 +48,13 @@ tags:
 
 Metadata files (`publishable.md`) contain only frontmatter with an empty body.
 
-## Schema Field
+## Schemas
 
-The `schema: publishable/v1` field in version files is **injected by the CLI** during write. It is NOT required in the user's input markdown file. The ValidationService does not check for it.
+There are 4 built-in schemas: `blog`, `linkedin`, `bluesky`, `x`. They are defined as JSON Schema objects (with an `x-publishable` body extension) in `src/schemas/defaults.ts` and written to `{vault}/schemas/{name}.json` during `publishable init`.
+
+Select a schema with `--schema <name>` on `update` and `validate` commands. Defaults to `blog`.
+
+The `schema: {name}/v1` field in version files (e.g. `schema: blog/v1`) is **injected by the CLI** during write. It is NOT required in the user's input markdown file. The ValidationService does not check for it.
 
 ## Duplicate Content
 
@@ -79,6 +83,7 @@ Examples of valid handles: `my-post`, `phase-0-spec`, `api-guide-2024`
 
 | Layer            | Location                                  | Responsibility                         |
 | ---------------- | ----------------------------------------- | -------------------------------------- |
+| Schema definitions | `src/schemas/defaults.ts`               | Built-in JSON schemas for blog, linkedin, bluesky, x |
 | CLI wiring       | `src/index.ts`                            | Register commander commands            |
 | Command handlers | `src/commands/*.ts`                       | Thin: call service, call output helper |
 | Business logic   | `src/services/PublishableService.ts`      | Orchestrate validation + storage       |
@@ -114,7 +119,7 @@ Run tests with `npm test`. Coverage report with `npm run test:coverage`. Both ar
 | `VERSION_NOT_FOUND`        | Version number does not exist for handle                       |
 | `INVALID_HANDLE`           | Handle fails regex validation                                  |
 | `TITLE_REQUIRED_ON_CREATE` | No title in file frontmatter or `--title` flag on first create |
-| `SCHEMA_VALIDATION_FAILED` | Content failed publishable/v1 validation                       |
+| `SCHEMA_VALIDATION_FAILED` | Content failed schema validation                               |
 | `FILE_NOT_FOUND`           | Input `--file` path does not exist                             |
 | `STORAGE_ERROR`            | Filesystem read/write failure                                  |
 | `VAULT_NOT_INITIALIZED`    | Vault directory not found; run `publishable init`              |
