@@ -9,6 +9,7 @@ import { PublishableError } from "../utils/errors.js";
 import { DEFAULT_SCHEMAS } from "../schemas/defaults.js";
 import type {
   ErrorCode,
+  ExportFormat,
   Handle,
   PublishableMeta,
   PublishableSchema,
@@ -247,13 +248,10 @@ export class PublishableService {
   async update(
     handle: string,
     fileContent: string,
-    opts: { title?: string; message?: string; schema?: string },
+    opts: { title?: string; message?: string },
   ): Promise<PublishableSummary> {
     await this.assertVaultInitialized();
     this.assertValidHandle(handle);
-
-    const resolvedSchema = opts.schema ?? "blog";
-    const schemaJson = await this.readSchemaFile(resolvedSchema);
 
     const parsed = matter(fileContent);
     const fileFrontmatter = parsed.data as Record<string, unknown>;
@@ -262,25 +260,6 @@ export class PublishableService {
     // Title resolution: --title flag overrides file frontmatter
     const resolvedTitle =
       opts.title ?? (fileFrontmatter["title"] as string | undefined);
-
-    // Build frontmatter for validation (exclude version-specific fields)
-    const frontmatterToValidate: Record<string, unknown> = {
-      ...fileFrontmatter,
-      ...(resolvedTitle && { title: resolvedTitle }),
-    };
-
-    const validation = this.validator.validate(
-      frontmatterToValidate,
-      body,
-      schemaJson,
-    );
-    if (!validation.valid) {
-      throw new PublishableError(
-        "SCHEMA_VALIDATION_FAILED",
-        "Publishable content failed validation",
-        validation.errors,
-      );
-    }
 
     const now = new Date().toISOString();
 
@@ -296,13 +275,6 @@ export class PublishableService {
     }
     const isNew = existingMeta === undefined;
 
-    if (isNew && !resolvedTitle) {
-      throw new PublishableError(
-        "TITLE_REQUIRED_ON_CREATE",
-        "A --title is required when creating a new publishable (or include title in file frontmatter)",
-      );
-    }
-
     let newVersionNumber: number;
     let meta: PublishableMeta;
 
@@ -310,7 +282,7 @@ export class PublishableService {
       newVersionNumber = 1;
       meta = {
         handle,
-        title: resolvedTitle!,
+        title: resolvedTitle ?? "",
         current_version: 1,
         created_at: now,
         updated_at: now,
@@ -328,16 +300,17 @@ export class PublishableService {
 
     const versionFrontmatter: VersionFrontmatter = {
       version: newVersionNumber,
-      schema: `${resolvedSchema}/v1`,
       message: opts.message ?? "",
       created_at: now,
       title: resolvedTitle ?? meta.title,
-      ...(frontmatterToValidate["slug"] !== undefined && {
-        slug: frontmatterToValidate["slug"] as string,
+      ...(fileFrontmatter["slug"] !== undefined && {
+        slug: fileFrontmatter["slug"] as string,
       }),
-      summary: frontmatterToValidate["summary"] as string,
-      ...(frontmatterToValidate["tags"] !== undefined && {
-        tags: frontmatterToValidate["tags"] as string[],
+      ...(fileFrontmatter["summary"] !== undefined && {
+        summary: fileFrontmatter["summary"] as string,
+      }),
+      ...(fileFrontmatter["tags"] !== undefined && {
+        tags: fileFrontmatter["tags"] as string[],
       }),
     };
 
@@ -368,7 +341,28 @@ export class PublishableService {
     const schemaJson = await this.readSchemaFile(resolvedSchema);
     const parsed = matter(fileContent);
     const body = parsed.content.trimStart();
-    return this.validator.validate(parsed.data, body, schemaJson);
+    const result = this.validator.validate(parsed.data, body, schemaJson);
+    return { ...result, schema: resolvedSchema };
+  }
+
+  async validateVersion(
+    version: PublishableVersion,
+    schema?: string,
+  ): Promise<ValidationResult> {
+    await this.assertVaultInitialized();
+    const resolvedSchema = schema ?? "blog";
+    const schemaJson = await this.readSchemaFile(resolvedSchema);
+    const { title, slug, summary, tags } = version.frontmatter;
+    const contentFields: Record<string, unknown> = { title };
+    if (slug !== undefined) contentFields.slug = slug;
+    if (summary !== undefined) contentFields.summary = summary;
+    if (tags !== undefined) contentFields.tags = tags;
+    const result = this.validator.validate(
+      contentFields,
+      version.body,
+      schemaJson,
+    );
+    return { ...result, schema: resolvedSchema };
   }
 
   async init(): Promise<{ schemas: string[]; created: string[] }> {
@@ -463,6 +457,67 @@ export class PublishableService {
   }
 
   async serializeVersion(version: PublishableVersion): Promise<string> {
-    return matter.stringify(version.body, version.frontmatter);
+    return this.serializeVersionAs(version, "raw");
+  }
+
+  serializeVersionAs(
+    version: PublishableVersion,
+    format: ExportFormat | "raw",
+  ): string {
+    if (format === "raw") {
+      return matter.stringify(version.body, version.frontmatter);
+    }
+
+    const { title, slug, summary, tags } = version.frontmatter;
+    const contentFrontmatter: Record<string, unknown> = { title };
+    if (slug !== undefined) contentFrontmatter.slug = slug;
+    if (summary !== undefined) contentFrontmatter.summary = summary;
+    if (tags !== undefined) contentFrontmatter.tags = tags;
+
+    if (format === "md") {
+      return matter.stringify(version.body, contentFrontmatter);
+    }
+    if (format === "body") {
+      return version.body;
+    }
+    // format === "json"
+    return JSON.stringify(
+      { ...contentFrontmatter, body: version.body },
+      null,
+      2,
+    );
+  }
+
+  async export(
+    handle: string,
+    opts: { schema?: string; format: ExportFormat },
+  ): Promise<string> {
+    await this.assertVaultInitialized();
+    this.assertValidHandle(handle);
+    const version = await this.current(handle);
+
+    const resolvedSchema = opts.schema ?? "blog";
+    const schemaJson = await this.readSchemaFile(resolvedSchema);
+
+    const { title, slug, summary, tags } = version.frontmatter;
+    const contentForValidation: Record<string, unknown> = { title };
+    if (slug !== undefined) contentForValidation.slug = slug;
+    if (summary !== undefined) contentForValidation.summary = summary;
+    if (tags !== undefined) contentForValidation.tags = tags;
+
+    const validation = this.validator.validate(
+      contentForValidation,
+      version.body,
+      schemaJson,
+    );
+    if (!validation.valid) {
+      throw new PublishableError(
+        "SCHEMA_VALIDATION_FAILED",
+        "Publishable content failed validation",
+        validation.errors,
+      );
+    }
+
+    return this.serializeVersionAs(version, opts.format);
   }
 }

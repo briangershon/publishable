@@ -10,6 +10,7 @@ import { showCommand } from "./commands/show.js";
 import { revertCommand } from "./commands/revert.js";
 import { listCommand } from "./commands/list.js";
 import { getCommand } from "./commands/get.js";
+import { exportCommand } from "./commands/export.js";
 
 const program = new Command();
 
@@ -24,8 +25,15 @@ program
 program.addHelpText(
   "after",
   `
-Built-in schemas (run "publishable init" to write these to your vault):
-───────────────────────────────────────────────────────────────────────
+Workflow:
+─────────
+  1. publishable update my-post --file draft.md   # save draft, no validation
+  2. publishable update my-post --file draft.md   # keep iterating freely
+  3. publishable export my-post --format md       # validate + get clean output
+     publishable export my-post --format body     # paste-ready body text
+
+Built-in schemas (used with "export" and "validate"):
+──────────────────────────────────────────────────────
   blog      — title, slug, summary, tags required; body must have heading
   linkedin  — title, summary (≤3000 chars) required; body required
   bluesky   — title, summary (≤300 chars) required; body required
@@ -48,9 +56,6 @@ Example blog file:
   # Getting Started with the API
 
   Your content here...
-
-Fields injected by CLI (do NOT include in input files):
-  version, schema, message, created_at, reverted_from
 
 Handle rules:
   Pattern: ^[a-z][a-z0-9-]*$
@@ -88,22 +93,21 @@ program
   .command("update <handle>")
   .description("Create or update a publishable from a markdown file")
   .requiredOption("--file <file>", "Path to markdown file")
-  .option("--title <title>", "Title (required on first create if not in file)")
+  .option("--title <title>", "Title (updates the handle's canonical title)")
   .option("--message <msg>", "Version message")
-  .option("--schema <type>", "Schema name (default: blog)", "blog")
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
 Examples:
-  # Create new blog post (title required on first create if not in frontmatter)
-  publishable update my-post --file post.md --title "My Post"
+  # Create a new publishable (no validation — draft freely)
+  publishable update my-post --file draft.md
 
-  # Create a LinkedIn post
-  publishable update my-li-post --file linkedin.md --schema linkedin
+  # Set a canonical title on first create
+  publishable update my-post --file draft.md --title "My Post"
 
-  # Update existing with a version message
-  publishable update my-post --file post.md --message "Fix typos"
+  # Save a new version with a message
+  publishable update my-post --file post.md --message "Improve intro"
 `,
   )
   .action(updateCommand);
@@ -116,24 +120,58 @@ program
   .action(currentCommand);
 
 program
-  .command("validate")
-  .description("Validate a markdown file against a schema")
-  .requiredOption("--file <file>", "Path to markdown file")
+  .command("validate <handle>")
+  .description("Validate the current version of a publishable against a schema")
   .option("--schema <type>", "Schema name (default: blog)", "blog")
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
 Examples:
-  publishable validate --file post.md
-  publishable validate --file post.md --schema linkedin
-  publishable validate --file post.md --json
+  publishable validate my-post
+  publishable validate my-post --schema linkedin
+  publishable validate my-post --json
 
-Note: Always exits 0 — this is a dry-run inspection tool. Only "update" exits
-      non-zero on invalid content.
+Note: Always exits 0 — this is a dry-run inspection tool. Use "export" to
+      validate and get output in one step (exits non-zero on invalid content).
 `,
   )
   .action(validateCommand);
+
+program
+  .command("export <handle>")
+  .description("Validate and export a publishable in a publish-ready format")
+  .option(
+    "--format <format>",
+    "Output format: md, body, or json (default: md)",
+    "md",
+  )
+  .option(
+    "--schema <type>",
+    "Schema to validate against (default: blog)",
+    "blog",
+  )
+  .option("--output <file>", "Write output to file instead of stdout")
+  .option("--json", "Output as JSON envelope")
+  .addHelpText(
+    "after",
+    `
+Validates the current version against a schema, then outputs clean content.
+Exits non-zero if validation fails.
+
+Formats:
+  md    — content-only frontmatter (title, slug, summary, tags) + body
+  body  — just the markdown body text (paste into LinkedIn, Bluesky, X, etc.)
+  json  — content fields as a plain JSON object
+
+Examples:
+  publishable export my-post
+  publishable export my-post --format body
+  publishable export my-post --format md --output clean.md
+  publishable export my-li-post --schema linkedin --format body
+`,
+  )
+  .action(exportCommand);
 
 program
   .command("versions <handle>")

@@ -28,15 +28,17 @@ export interface PublishableMeta {
 
 export interface VersionFrontmatter {
   version: number;
-  schema: string;
+  schema?: string;
   message: string;
   created_at: string;
   title: string;
   slug?: string;
-  summary: string;
+  summary?: string;
   tags?: string[];
   reverted_from?: number;
 }
+
+export type ExportFormat = "md" | "body" | "json";
 
 export interface PublishableVersion {
   frontmatter: VersionFrontmatter;
@@ -59,6 +61,7 @@ export interface ValidationError {
 
 export interface ValidationResult {
   valid: boolean;
+  schema?: string;
   errors: ValidationError[];
 }
 
@@ -66,7 +69,6 @@ export type ErrorCode =
   | "PUBLISHABLE_NOT_FOUND"
   | "VERSION_NOT_FOUND"
   | "INVALID_HANDLE"
-  | "TITLE_REQUIRED_ON_CREATE"
   | "SCHEMA_NOT_FOUND"
   | "SCHEMA_VALIDATION_FAILED"
   | "FILE_NOT_FOUND"

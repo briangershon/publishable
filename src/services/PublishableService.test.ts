@@ -64,15 +64,7 @@ describe("PublishableService", () => {
       ).rejects.toMatchObject({ code: "INVALID_HANDLE" });
     });
 
-    it("throws SCHEMA_VALIDATION_FAILED for invalid content", async () => {
-      await expect(
-        svc.update("my-post", "---\ntitle: Test\n---\nNo heading here", {}),
-      ).rejects.toMatchObject({
-        code: "SCHEMA_VALIDATION_FAILED",
-      });
-    });
-
-    it("throws SCHEMA_VALIDATION_FAILED when no title on first create", async () => {
+    it("saves successfully without a title (draft mode)", async () => {
       const noTitle = `---
 slug: my-post
 summary: "A summary."
@@ -83,9 +75,18 @@ tags:
 
 Body content.
 `;
-      await expect(svc.update("my-post", noTitle, {})).rejects.toMatchObject({
-        code: "SCHEMA_VALIDATION_FAILED",
-      });
+      const result = await svc.update("my-post", noTitle, {});
+      expect(result.handle).toBe("my-post");
+      expect(result.title).toBe("");
+    });
+
+    it("saves successfully with invalid schema content (no validation at update)", async () => {
+      const result = await svc.update(
+        "my-post",
+        "---\ntitle: Test\n---\nNo heading here",
+        {},
+      );
+      expect(result.handle).toBe("my-post");
     });
   });
 
@@ -215,6 +216,57 @@ Body content.
       );
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("export()", () => {
+    beforeEach(async () => {
+      await svc.update("my-post", validMarkdown, {});
+    });
+
+    it("throws SCHEMA_VALIDATION_FAILED for invalid content", async () => {
+      await svc.update(
+        "bad-post",
+        "---\ntitle: Test\n---\nNo heading here",
+        {},
+      );
+      await expect(
+        svc.export("bad-post", { format: "md" }),
+      ).rejects.toMatchObject({ code: "SCHEMA_VALIDATION_FAILED" });
+    });
+
+    it("format md returns content-only frontmatter + body", async () => {
+      const result = await svc.export("my-post", { format: "md" });
+      expect(result).toContain("title:");
+      expect(result).toContain("slug:");
+      expect(result).toContain("summary:");
+      expect(result).toContain("# My Post");
+      expect(result).not.toContain("version:");
+      expect(result).not.toContain("message:");
+      expect(result).not.toContain("created_at:");
+    });
+
+    it("format body returns only the markdown body", async () => {
+      const result = await svc.export("my-post", { format: "body" });
+      expect(result).toBe("# My Post\n\nBody content here.\n");
+      expect(result).not.toContain("---");
+    });
+
+    it("format json returns content fields as plain JSON", async () => {
+      const result = await svc.export("my-post", { format: "json" });
+      const parsed = JSON.parse(result) as Record<string, unknown>;
+      expect(parsed.title).toBe("My Post");
+      expect(parsed.slug).toBe("my-post");
+      expect(parsed.summary).toBe("A short summary.");
+      expect(parsed.body).toContain("# My Post");
+      expect(parsed).not.toHaveProperty("version");
+      expect(parsed).not.toHaveProperty("message");
+    });
+
+    it("throws PUBLISHABLE_NOT_FOUND for unknown handle", async () => {
+      await expect(
+        svc.export("nonexistent", { format: "md" }),
+      ).rejects.toMatchObject({ code: "PUBLISHABLE_NOT_FOUND" });
     });
   });
 });

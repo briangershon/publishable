@@ -94,11 +94,12 @@ function printHuman(data: unknown): void {
 
   // ValidationResult
   if ("valid" in obj) {
-    const r = obj as { valid: boolean; errors: unknown[] };
+    const r = obj as { valid: boolean; schema: string; errors: unknown[] };
+    const schemaLabel = r.schema ?? "unknown";
     if (r.valid) {
-      console.log("Valid: Content passed publishable/v1 schema validation.");
+      console.log(`Valid: Content passed ${schemaLabel} schema validation.`);
     } else {
-      console.log("Invalid: Content failed publishable/v1 schema validation.");
+      console.log(`Invalid: Content failed ${schemaLabel} schema validation.`);
       if (Array.isArray(r.errors)) {
         for (const e of r.errors as Array<{
           path: string;

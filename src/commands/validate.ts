@@ -1,26 +1,19 @@
-import { promises as fs } from "fs";
 import { PublishableService } from "../services/PublishableService.js";
 import { PublishableError } from "../utils/errors.js";
 import { outputSuccess, outputError } from "../utils/output.js";
 
-export async function validateCommand(opts: {
-  file: string;
-  schema?: string;
-  json?: boolean;
-}): Promise<void> {
+export async function validateCommand(
+  handle: string,
+  opts: {
+    schema?: string;
+    json?: boolean;
+  },
+): Promise<void> {
   const service = new PublishableService();
   const useJson = opts.json ?? false;
   try {
-    let fileContent: string;
-    try {
-      fileContent = await fs.readFile(opts.file, "utf-8");
-    } catch {
-      throw new PublishableError(
-        "FILE_NOT_FOUND",
-        `File not found: ${opts.file}`,
-      );
-    }
-    const result = await service.validate(fileContent, opts.schema);
+    const version = await service.current(handle);
+    const result = await service.validateVersion(version, opts.schema);
     // validate exits 0 even on invalid content (dry-run semantics)
     outputSuccess(result, useJson);
   } catch (e) {
