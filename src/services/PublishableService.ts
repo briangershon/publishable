@@ -29,6 +29,15 @@ export class PublishableService {
     this.validator = new ValidationService();
   }
 
+  private async assertVaultInitialized(): Promise<void> {
+    if (!(await this.repo.vaultExists())) {
+      throw new PublishableError(
+        "VAULT_NOT_INITIALIZED",
+        "No vault found. Run 'publishable init' to set up your vault.",
+      );
+    }
+  }
+
   private assertValidHandle(handle: string): void {
     if (!HANDLE_REGEX.test(handle)) {
       throw new PublishableError(
@@ -43,6 +52,7 @@ export class PublishableService {
     filePath: string,
     opts: { title?: string; message?: string; schema?: string },
   ): Promise<PublishableSummary> {
+    await this.assertVaultInitialized();
     this.assertValidHandle(handle);
 
     const resolvedSchema = opts.schema ?? "blog";
@@ -140,12 +150,14 @@ export class PublishableService {
   }
 
   async current(handle: string): Promise<PublishableVersion> {
+    await this.assertVaultInitialized();
     this.assertValidHandle(handle);
     const meta = await this.repo.readMeta(handle);
     return this.repo.readVersion(handle, meta.current_version);
   }
 
   async validate(filePath: string, schema?: string): Promise<ValidationResult> {
+    await this.assertVaultInitialized();
     const resolvedSchema = schema ?? "blog";
     const schemaJson = await this.repo.readSchemaFile(resolvedSchema);
     const fileContent = await this.repo.readFileContent(filePath);
@@ -169,6 +181,7 @@ export class PublishableService {
   async versions(
     handle: string,
   ): Promise<{ handle: Handle; versions: number[]; current_version: number }> {
+    await this.assertVaultInitialized();
     this.assertValidHandle(handle);
     const meta = await this.repo.readMeta(handle);
     const versions = await this.repo.listVersionNumbers(handle);
@@ -176,6 +189,7 @@ export class PublishableService {
   }
 
   async show(handle: string, version: number): Promise<PublishableVersion> {
+    await this.assertVaultInitialized();
     this.assertValidHandle(handle);
     await this.repo.readMeta(handle); // ensure publishable exists
     return this.repo.readVersion(handle, version);
@@ -186,6 +200,7 @@ export class PublishableService {
     targetVersion: number,
     opts: { message?: string },
   ): Promise<PublishableSummary> {
+    await this.assertVaultInitialized();
     this.assertValidHandle(handle);
     const meta = await this.repo.readMeta(handle);
     const oldVersion = await this.repo.readVersion(handle, targetVersion);
@@ -225,6 +240,7 @@ export class PublishableService {
   }
 
   async list(): Promise<PublishableSummary[]> {
+    await this.assertVaultInitialized();
     const handles = await this.repo.listHandles();
     const summaries: PublishableSummary[] = [];
     for (const handle of handles) {
@@ -241,6 +257,7 @@ export class PublishableService {
   }
 
   async get(handle: string): Promise<PublishableSummary> {
+    await this.assertVaultInitialized();
     this.assertValidHandle(handle);
     const meta = await this.repo.readMeta(handle);
     return {

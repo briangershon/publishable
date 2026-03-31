@@ -117,6 +117,7 @@ Run tests with `npm test`. Coverage report with `npm run test:coverage`. Both ar
 | `SCHEMA_VALIDATION_FAILED` | Content failed publishable/v1 validation                       |
 | `FILE_NOT_FOUND`           | Input `--file` path does not exist                             |
 | `STORAGE_ERROR`            | Filesystem read/write failure                                  |
+| `VAULT_NOT_INITIALIZED`    | Vault directory not found; run `publishable init`              |
 
 ## Concurrency
 

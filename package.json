@@ -17,7 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "check": "npm run lint && tsc --noEmit && prettier --check . && npm test",
     "format": "prettier --write .",
-    "dev": "PUBLISHABLE_VAULT=.publishable-vault-dev tsx src/index.ts",
+    "dev": "tsx src/index.ts",
     "start": "node dist/index.js"
   },
   "keywords": [

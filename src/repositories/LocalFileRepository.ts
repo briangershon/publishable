@@ -45,6 +45,15 @@ export class LocalFileRepository {
     await fs.mkdir(this.vaultRoot, { recursive: true });
   }
 
+  async vaultExists(): Promise<boolean> {
+    try {
+      await fs.access(this.vaultRoot);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async schemaFileExists(name: string): Promise<boolean> {
     try {
       await fs.access(this.schemaPath(name));

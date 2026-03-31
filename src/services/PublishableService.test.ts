@@ -35,6 +35,15 @@ describe("PublishableService", () => {
     tempFile = join(vaultRoot, "input.md");
   });
 
+  describe("vault not initialized", () => {
+    it("throws VAULT_NOT_INITIALIZED when vault directory does not exist", async () => {
+      const uninitSvc = new PublishableService(makeTempDir());
+      await expect(uninitSvc.list()).rejects.toMatchObject({
+        code: "VAULT_NOT_INITIALIZED",
+      });
+    });
+  });
+
   afterEach(async () => {
     await fs.rm(vaultRoot, { recursive: true, force: true });
   });

@@ -70,7 +70,8 @@ export type ErrorCode =
   | "SCHEMA_NOT_FOUND"
   | "SCHEMA_VALIDATION_FAILED"
   | "FILE_NOT_FOUND"
-  | "STORAGE_ERROR";
+  | "STORAGE_ERROR"
+  | "VAULT_NOT_INITIALIZED";
 
 export interface SuccessOutput<T> {
   ok: true;
