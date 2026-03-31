@@ -20,7 +20,6 @@ export interface PublishableSchema {
 
 export interface PublishableMeta {
   handle: Handle;
-  title: string;
   current_version: number;
   created_at: string;
   updated_at: string;
@@ -31,11 +30,8 @@ export interface VersionFrontmatter {
   schema?: string;
   message: string;
   created_at: string;
-  title: string;
-  slug?: string;
-  summary?: string;
-  tags?: string[];
   reverted_from?: number;
+  [key: string]: unknown;
 }
 
 export type ExportFormat = "md" | "body" | "json";
@@ -47,7 +43,6 @@ export interface PublishableVersion {
 
 export interface PublishableSummary {
   handle: Handle;
-  title: string;
   current_version: number;
   created_at: string;
   updated_at: string;

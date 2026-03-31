@@ -7,7 +7,6 @@ export async function updateCommand(
   handle: string,
   opts: {
     file: string;
-    title?: string;
     message?: string;
     json?: boolean;
   },
@@ -25,7 +24,6 @@ export async function updateCommand(
       );
     }
     const result = await service.update(handle, fileContent, {
-      title: opts.title,
       message: opts.message,
     });
     outputSuccess(result, useJson);

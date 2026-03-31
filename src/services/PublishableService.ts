@@ -21,6 +21,24 @@ import type {
 
 const HANDLE_REGEX = /^[a-z][a-z0-9-]*$/;
 
+const SYSTEM_FIELDS = new Set([
+  "version",
+  "schema",
+  "message",
+  "created_at",
+  "reverted_from",
+]);
+
+function extractContentFields(
+  frontmatter: VersionFrontmatter,
+): Record<string, unknown> {
+  const content: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(frontmatter)) {
+    if (!SYSTEM_FIELDS.has(key) && value !== undefined) content[key] = value;
+  }
+  return content;
+}
+
 export class PublishableService {
   private readonly vaultRoot: string;
   private readonly fs: IFileSystem;
@@ -206,7 +224,6 @@ export class PublishableService {
   private metaToSummary(meta: PublishableMeta): PublishableSummary {
     return {
       handle: meta.handle,
-      title: meta.title,
       current_version: meta.current_version,
       created_at: meta.created_at,
       updated_at: meta.updated_at,
@@ -248,7 +265,7 @@ export class PublishableService {
   async update(
     handle: string,
     fileContent: string,
-    opts: { title?: string; message?: string },
+    opts: { message?: string },
   ): Promise<PublishableSummary> {
     await this.assertVaultInitialized();
     this.assertValidHandle(handle);
@@ -256,10 +273,6 @@ export class PublishableService {
     const parsed = matter(fileContent);
     const fileFrontmatter = parsed.data as Record<string, unknown>;
     const body = parsed.content.trimStart();
-
-    // Title resolution: --title flag overrides file frontmatter
-    const resolvedTitle =
-      opts.title ?? (fileFrontmatter["title"] as string | undefined);
 
     const now = new Date().toISOString();
 
@@ -282,7 +295,6 @@ export class PublishableService {
       newVersionNumber = 1;
       meta = {
         handle,
-        title: resolvedTitle ?? "",
         current_version: 1,
         created_at: now,
         updated_at: now,
@@ -295,24 +307,18 @@ export class PublishableService {
         current_version: newVersionNumber,
         updated_at: now,
       };
-      if (opts.title) meta.title = opts.title;
     }
 
     const versionFrontmatter: VersionFrontmatter = {
       version: newVersionNumber,
       message: opts.message ?? "",
       created_at: now,
-      title: resolvedTitle ?? meta.title,
-      ...(fileFrontmatter["slug"] !== undefined && {
-        slug: fileFrontmatter["slug"] as string,
-      }),
-      ...(fileFrontmatter["summary"] !== undefined && {
-        summary: fileFrontmatter["summary"] as string,
-      }),
-      ...(fileFrontmatter["tags"] !== undefined && {
-        tags: fileFrontmatter["tags"] as string[],
-      }),
     };
+    for (const [key, value] of Object.entries(fileFrontmatter)) {
+      if (!SYSTEM_FIELDS.has(key) && value !== undefined) {
+        versionFrontmatter[key] = value;
+      }
+    }
 
     const version: PublishableVersion = {
       frontmatter: versionFrontmatter,
@@ -352,11 +358,7 @@ export class PublishableService {
     await this.assertVaultInitialized();
     const resolvedSchema = schema ?? "blog";
     const schemaJson = await this.readSchemaFile(resolvedSchema);
-    const { title, slug, summary, tags } = version.frontmatter;
-    const contentFields: Record<string, unknown> = { title };
-    if (slug !== undefined) contentFields.slug = slug;
-    if (summary !== undefined) contentFields.summary = summary;
-    if (tags !== undefined) contentFields.tags = tags;
+    const contentFields = extractContentFields(version.frontmatter);
     const result = this.validator.validate(
       contentFields,
       version.body,
@@ -468,11 +470,7 @@ export class PublishableService {
       return matter.stringify(version.body, version.frontmatter);
     }
 
-    const { title, slug, summary, tags } = version.frontmatter;
-    const contentFrontmatter: Record<string, unknown> = { title };
-    if (slug !== undefined) contentFrontmatter.slug = slug;
-    if (summary !== undefined) contentFrontmatter.summary = summary;
-    if (tags !== undefined) contentFrontmatter.tags = tags;
+    const contentFrontmatter = extractContentFields(version.frontmatter);
 
     if (format === "md") {
       return matter.stringify(version.body, contentFrontmatter);
@@ -499,11 +497,7 @@ export class PublishableService {
     const resolvedSchema = opts.schema ?? "blog";
     const schemaJson = await this.readSchemaFile(resolvedSchema);
 
-    const { title, slug, summary, tags } = version.frontmatter;
-    const contentForValidation: Record<string, unknown> = { title };
-    if (slug !== undefined) contentForValidation.slug = slug;
-    if (summary !== undefined) contentForValidation.summary = summary;
-    if (tags !== undefined) contentForValidation.tags = tags;
+    const contentForValidation = extractContentFields(version.frontmatter);
 
     const validation = this.validator.validate(
       contentForValidation,

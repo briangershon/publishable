@@ -24,7 +24,6 @@ describe("outputSuccess()", () => {
     outputSuccess(
       {
         handle: "my-post",
-        title: "My Post",
         current_version: 1,
         created_at: "2026-01-01T00:00:00.000Z",
         updated_at: "2026-01-01T00:00:00.000Z",
@@ -33,7 +32,6 @@ describe("outputSuccess()", () => {
     );
     const output = logSpy.mock.calls.map((c: unknown[]) => c[0]).join("\n");
     expect(output).toContain("my-post");
-    expect(output).toContain("My Post");
     expect(output).toContain("1");
   });
 

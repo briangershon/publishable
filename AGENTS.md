@@ -67,6 +67,7 @@ Content moves through three stages:
 3. **`export`** — Validates strictly, then outputs clean content. Exits non-zero if validation fails. This is the gate before publishing.
 
 Export formats (`--format`):
+
 - `md` — Content-only frontmatter (title, slug, summary, tags) + body
 - `body` — Markdown body only
 - `json` — Content fields as a plain JSON object
@@ -96,19 +97,19 @@ Examples of valid handles: `my-post`, `phase-0-spec`, `api-guide-2024`
 
 ## Architecture Layers
 
-| Layer                | Location                                  | Responsibility                                        |
-| -------------------- | ----------------------------------------- | ----------------------------------------------------- |
-| Schema definitions   | `src/schemas/defaults.ts`                 | Built-in JSON schemas for blog, linkedin, bluesky, x  |
-| CLI wiring           | `src/index.ts`                            | Register commander commands                           |
-| Command handlers     | `src/commands/*.ts`                       | Thin: call service, call output helper                |
-| Business logic       | `src/services/PublishableService.ts`      | Orchestrate validation + storage                      |
-| Validation           | `src/services/ValidationService.ts`       | Returns result, never throws                          |
-| Filesystem interface | `src/filesystem/IFileSystem.ts`           | Abstraction for all fs I/O (6 async methods)          |
-| Filesystem (real)    | `src/filesystem/NodeFileSystem.ts`        | Node.js `fs/promises` wrapper                         |
-| Filesystem (test)    | `src/filesystem/InMemoryFileSystem.ts`    | In-memory mock used in all tests                      |
-| Types                | `src/types.ts`                            | Shared TypeScript interfaces                          |
-| Errors               | `src/utils/errors.ts`                     | `PublishableError` class                              |
-| Output               | `src/utils/output.ts`                     | Human-readable and JSON output                        |
+| Layer                | Location                               | Responsibility                                       |
+| -------------------- | -------------------------------------- | ---------------------------------------------------- |
+| Schema definitions   | `src/schemas/defaults.ts`              | Built-in JSON schemas for blog, linkedin, bluesky, x |
+| CLI wiring           | `src/index.ts`                         | Register commander commands                          |
+| Command handlers     | `src/commands/*.ts`                    | Thin: call service, call output helper               |
+| Business logic       | `src/services/PublishableService.ts`   | Orchestrate validation + storage                     |
+| Validation           | `src/services/ValidationService.ts`    | Returns result, never throws                         |
+| Filesystem interface | `src/filesystem/IFileSystem.ts`        | Abstraction for all fs I/O (6 async methods)         |
+| Filesystem (real)    | `src/filesystem/NodeFileSystem.ts`     | Node.js `fs/promises` wrapper                        |
+| Filesystem (test)    | `src/filesystem/InMemoryFileSystem.ts` | In-memory mock used in all tests                     |
+| Types                | `src/types.ts`                         | Shared TypeScript interfaces                         |
+| Errors               | `src/utils/errors.ts`                  | `PublishableError` class                             |
+| Output               | `src/utils/output.ts`                  | Human-readable and JSON output                       |
 
 ## Tests
 
@@ -138,14 +139,14 @@ Use `vi.spyOn(process, "exit")` to assert on exit calls without actually exiting
 
 ## Development Workflow
 
-| Script                  | What it does                                              |
-| ----------------------- | --------------------------------------------------------- |
-| `npm run dev`           | Run CLI directly via `tsx` (no build step)                |
-| `npm run build`         | Compile TypeScript to `dist/`, set executable bit         |
-| `npm test`              | Run all tests with Vitest                                 |
-| `npm run test:coverage` | Run tests with v8 coverage report                         |
-| `npm run lint`          | Lint `src/` with oxlint                                   |
-| `npm run format`        | Format all files with Prettier                            |
+| Script                  | What it does                                                              |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `npm run dev`           | Run CLI directly via `tsx` (no build step)                                |
+| `npm run build`         | Compile TypeScript to `dist/`, set executable bit                         |
+| `npm test`              | Run all tests with Vitest                                                 |
+| `npm run test:coverage` | Run tests with v8 coverage report                                         |
+| `npm run lint`          | Lint `src/` with oxlint                                                   |
+| `npm run format`        | Format all files with Prettier                                            |
 | `npm run check`         | lint + tsc --noEmit + prettier --check + test (**run before committing**) |
 
 Always run `npm run check` before committing or submitting changes.

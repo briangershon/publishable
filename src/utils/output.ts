@@ -46,7 +46,6 @@ function printHuman(data: unknown): void {
   // PublishableSummary or update/revert result
   if ("handle" in obj && "current_version" in obj) {
     console.log(`handle:          ${obj.handle}`);
-    console.log(`title:           ${obj.title}`);
     console.log(`current_version: ${obj.current_version}`);
     console.log(`created_at:      ${obj.created_at}`);
     console.log(`updated_at:      ${obj.updated_at}`);
@@ -56,12 +55,24 @@ function printHuman(data: unknown): void {
   // PublishableVersion (current / show)
   if ("frontmatter" in obj && "body" in obj) {
     const fm = obj.frontmatter as Record<string, unknown>;
+    const versionSystemFields = new Set([
+      "version",
+      "schema",
+      "message",
+      "created_at",
+      "reverted_from",
+    ]);
     console.log(`version: ${fm.version}`);
-    console.log(`title:   ${fm.title}`);
-    console.log(`slug:    ${fm.slug}`);
-    console.log(`schema:  ${fm.schema}`);
+    if (fm.schema) console.log(`schema:  ${fm.schema}`);
     if (fm.message) console.log(`message: ${fm.message}`);
     if (fm.reverted_from) console.log(`reverted_from: ${fm.reverted_from}`);
+    for (const [key, value] of Object.entries(fm)) {
+      if (!versionSystemFields.has(key)) {
+        console.log(
+          `${key}: ${Array.isArray(value) ? (value as unknown[]).join(", ") : String(value)}`,
+        );
+      }
+    }
     console.log(`\n${obj.body}`);
     return;
   }

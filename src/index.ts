@@ -93,7 +93,6 @@ program
   .command("update <handle>")
   .description("Create or update a publishable from a markdown file")
   .requiredOption("--file <file>", "Path to markdown file")
-  .option("--title <title>", "Title (updates the handle's canonical title)")
   .option("--message <msg>", "Version message")
   .option("--json", "Output as JSON")
   .addHelpText(
@@ -102,9 +101,6 @@ program
 Examples:
   # Create a new publishable (no validation — draft freely)
   publishable update my-post --file draft.md
-
-  # Set a canonical title on first create
-  publishable update my-post --file draft.md --title "My Post"
 
   # Save a new version with a message
   publishable update my-post --file post.md --message "Improve intro"

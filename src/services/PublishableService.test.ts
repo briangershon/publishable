@@ -40,7 +40,6 @@ describe("PublishableService", () => {
       const result = await svc.update("my-post", validMarkdown, {});
       expect(result.handle).toBe("my-post");
       expect(result.current_version).toBe(1);
-      expect(result.title).toBe("My Post");
     });
 
     it("increments version on second update", async () => {
@@ -49,13 +48,6 @@ describe("PublishableService", () => {
         message: "second update",
       });
       expect(result.current_version).toBe(2);
-    });
-
-    it("--title flag overrides file frontmatter title", async () => {
-      const result = await svc.update("my-post", validMarkdown, {
-        title: "Override Title",
-      });
-      expect(result.title).toBe("Override Title");
     });
 
     it("throws INVALID_HANDLE for bad handle", async () => {
@@ -77,7 +69,6 @@ Body content.
 `;
       const result = await svc.update("my-post", noTitle, {});
       expect(result.handle).toBe("my-post");
-      expect(result.title).toBe("");
     });
 
     it("saves successfully with invalid schema content (no validation at update)", async () => {
