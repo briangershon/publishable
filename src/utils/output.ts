@@ -43,6 +43,19 @@ function printHuman(data: unknown): void {
   }
   const obj = data as Record<string, unknown>;
 
+  // versions list result
+  if ("versions" in obj && "current_version" in obj) {
+    const o = obj as {
+      handle: string;
+      versions: number[];
+      current_version: number;
+    };
+    console.log(`handle:          ${o.handle}`);
+    console.log(`current_version: ${o.current_version}`);
+    console.log(`versions:        ${o.versions.join(", ")}`);
+    return;
+  }
+
   // PublishableSummary or update/revert result
   if ("handle" in obj && "current_version" in obj) {
     console.log(`handle:          ${obj.handle}`);
@@ -74,19 +87,6 @@ function printHuman(data: unknown): void {
       }
     }
     console.log(`\n${obj.body}`);
-    return;
-  }
-
-  // versions list result
-  if ("versions" in obj && "current_version" in obj) {
-    const o = obj as {
-      handle: string;
-      versions: number[];
-      current_version: number;
-    };
-    console.log(`handle:          ${o.handle}`);
-    console.log(`current_version: ${o.current_version}`);
-    console.log(`versions:        ${o.versions.join(", ")}`);
     return;
   }
 
