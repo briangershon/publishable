@@ -1,15 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { promises as fs } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
+import { describe, it, expect, beforeEach } from "vitest";
 import { PublishableService } from "./PublishableService.js";
-
-function makeTempDir() {
-  return join(
-    tmpdir(),
-    `publishable-svc-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  );
-}
+import { InMemoryFileSystem } from "../filesystem/InMemoryFileSystem.js";
 
 const validMarkdown = `---
 title: "My Post"
@@ -24,26 +15,24 @@ Body content here.
 `;
 
 describe("PublishableService", () => {
-  let vaultRoot: string;
+  const vaultRoot = "/vault";
   let svc: PublishableService;
 
   beforeEach(async () => {
-    vaultRoot = makeTempDir();
-    svc = new PublishableService(vaultRoot);
+    svc = new PublishableService(vaultRoot, new InMemoryFileSystem());
     await svc.init();
   });
 
   describe("vault not initialized", () => {
     it("throws VAULT_NOT_INITIALIZED when vault directory does not exist", async () => {
-      const uninitSvc = new PublishableService(makeTempDir());
+      const uninitSvc = new PublishableService(
+        "/nonexistent",
+        new InMemoryFileSystem(),
+      );
       await expect(uninitSvc.list()).rejects.toMatchObject({
         code: "VAULT_NOT_INITIALIZED",
       });
     });
-  });
-
-  afterEach(async () => {
-    await fs.rm(vaultRoot, { recursive: true, force: true });
   });
 
   describe("update()", () => {
