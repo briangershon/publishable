@@ -111,6 +111,18 @@ Body content.
       const list = await svc.list();
       expect(list.map((s) => s.handle).sort()).toEqual(["post-a", "post-b"]);
     });
+
+    it("returns handles in sorted order", async () => {
+      for (const handle of ["zebra-post", "alpha-post", "middle-post"]) {
+        await svc.update(handle, validMarkdown, {});
+      }
+      const list = await svc.list();
+      expect(list.map((s) => s.handle)).toEqual([
+        "alpha-post",
+        "middle-post",
+        "zebra-post",
+      ]);
+    });
   });
 
   describe("get()", () => {
@@ -142,6 +154,15 @@ Body content.
       const version = await svc.current("my-post");
       expect(version.frontmatter.version).toBe(2);
     });
+
+    it("preserves body content and frontmatter fields through storage round-trip", async () => {
+      await svc.update("my-post", validMarkdown, {});
+      const version = await svc.current("my-post");
+      expect(version.body.trim()).toBe("# My Post\n\nBody content here.");
+      expect(version.frontmatter.slug).toBe("my-post");
+      expect(version.frontmatter.summary).toBe("A short summary.");
+      expect(version.frontmatter.tags).toEqual(["test"]);
+    });
   });
 
   describe("show()", () => {
@@ -167,6 +188,12 @@ Body content.
       const result = await svc.versions("my-post");
       expect(result.versions).toEqual([1, 2]);
       expect(result.current_version).toBe(2);
+    });
+
+    it("throws PUBLISHABLE_NOT_FOUND for unknown handle", async () => {
+      await expect(svc.versions("nonexistent")).rejects.toMatchObject({
+        code: "PUBLISHABLE_NOT_FOUND",
+      });
     });
   });
 
