@@ -48,17 +48,6 @@ describe("LocalFileRepository", () => {
     await fs.rm(vaultRoot, { recursive: true, force: true });
   });
 
-  describe("exists()", () => {
-    it("returns false for unknown handle", async () => {
-      expect(await repo.exists("my-post")).toBe(false);
-    });
-
-    it("returns true after writeMeta", async () => {
-      await repo.writeMeta(sampleMeta);
-      expect(await repo.exists("my-post")).toBe(true);
-    });
-  });
-
   describe("writeMeta() / readMeta()", () => {
     it("round-trips metadata", async () => {
       await repo.writeMeta(sampleMeta);
@@ -141,20 +130,6 @@ describe("LocalFileRepository", () => {
         "middle-post",
         "zebra-post",
       ]);
-    });
-  });
-
-  describe("readFileContent()", () => {
-    it("reads an existing file", async () => {
-      const filePath = join(vaultRoot, "test.md");
-      await fs.writeFile(filePath, "hello world", "utf-8");
-      expect(await repo.readFileContent(filePath)).toBe("hello world");
-    });
-
-    it("throws FILE_NOT_FOUND for missing file", async () => {
-      await expect(
-        repo.readFileContent(join(vaultRoot, "missing.md")),
-      ).rejects.toMatchObject({ code: "FILE_NOT_FOUND" });
     });
   });
 });

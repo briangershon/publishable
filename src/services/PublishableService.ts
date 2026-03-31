@@ -89,7 +89,18 @@ export class PublishableService {
     }
 
     const now = new Date().toISOString();
-    const isNew = !(await this.repo.exists(handle));
+
+    let existingMeta: PublishableMeta | undefined;
+    try {
+      existingMeta = await this.repo.readMeta(handle);
+    } catch (e) {
+      if (
+        !(e instanceof PublishableError) ||
+        e.code !== "PUBLISHABLE_NOT_FOUND"
+      )
+        throw e;
+    }
+    const isNew = existingMeta === undefined;
 
     if (isNew && !resolvedTitle) {
       throw new PublishableError(
@@ -111,7 +122,7 @@ export class PublishableService {
         updated_at: now,
       };
     } else {
-      meta = await this.repo.readMeta(handle);
+      meta = existingMeta!;
       newVersionNumber = meta.current_version + 1;
       meta = {
         ...meta,
@@ -176,9 +187,15 @@ export class PublishableService {
     await this.repo.ensureVaultDir();
     const created: string[] = [];
     for (const [name, schemaObj] of Object.entries(DEFAULT_SCHEMAS)) {
-      if (!(await this.repo.schemaFileExists(name))) {
-        await this.repo.writeSchemaFile(name, schemaObj);
-        created.push(name);
+      try {
+        await this.repo.readSchemaFile(name);
+      } catch (e) {
+        if (e instanceof PublishableError && e.code === "SCHEMA_NOT_FOUND") {
+          await this.repo.writeSchemaFile(name, schemaObj);
+          created.push(name);
+        } else {
+          throw e;
+        }
       }
     }
     return { schemas: Object.keys(DEFAULT_SCHEMAS), created };

@@ -55,24 +55,6 @@ export class LocalFileRepository implements IRepository {
     }
   }
 
-  async schemaFileExists(name: string): Promise<boolean> {
-    try {
-      await fs.access(this.schemaPath(name));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  async exists(handle: Handle): Promise<boolean> {
-    try {
-      await fs.access(this.publishableDir(handle));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   async readMeta(handle: Handle): Promise<PublishableMeta> {
     const path = this.metaPath(handle);
     let content: string;
@@ -177,17 +159,6 @@ export class LocalFileRepository implements IRepository {
     return handles.toSorted();
   }
 
-  async readFileContent(filePath: string): Promise<string> {
-    try {
-      return await fs.readFile(filePath, "utf-8");
-    } catch {
-      throw new PublishableError(
-        "FILE_NOT_FOUND",
-        `File not found: ${filePath}`,
-      );
-    }
-  }
-
   async readSchemaFile(name: string): Promise<PublishableSchema> {
     const path = this.schemaPath(name);
     let content: string;
@@ -222,17 +193,6 @@ export class LocalFileRepository implements IRepository {
       throw new PublishableError(
         "STORAGE_ERROR",
         `Failed to write schema '${name}': ${String(err)}`,
-      );
-    }
-  }
-
-  async writeFileContent(filePath: string, content: string): Promise<void> {
-    try {
-      await fs.writeFile(filePath, content, "utf-8");
-    } catch (err) {
-      throw new PublishableError(
-        "STORAGE_ERROR",
-        `Failed to write file '${filePath}': ${String(err)}`,
       );
     }
   }
