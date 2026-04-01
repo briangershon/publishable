@@ -169,17 +169,18 @@ Never inspect or edit vault files directly. The vault (`~/.publishable/vault/`) 
 
 ## Error Codes
 
-| Code                       | Meaning                                                        |
-| -------------------------- | -------------------------------------------------------------- |
-| `PUBLISHABLE_NOT_FOUND`    | Handle does not exist in the vault                             |
-| `VERSION_NOT_FOUND`        | Version number does not exist for handle                       |
-| `INVALID_HANDLE`           | Handle fails regex validation                                  |
-| `SCHEMA_NOT_FOUND`         | Schema name does not exist in `vault/schemas/`                 |
-| `TITLE_REQUIRED_ON_CREATE` | No title in file frontmatter or `--title` flag on first create |
-| `SCHEMA_VALIDATION_FAILED` | Content failed schema validation                               |
-| `FILE_NOT_FOUND`           | Input `--file` path does not exist                             |
-| `STORAGE_ERROR`            | Filesystem read/write failure                                  |
-| `VAULT_NOT_INITIALIZED`    | Vault directory not found; run `publishable init`              |
+| Code                       | Meaning                                           |
+| -------------------------- | ------------------------------------------------- |
+| `PUBLISHABLE_NOT_FOUND`    | Handle does not exist in the vault                |
+| `VERSION_NOT_FOUND`        | Version number does not exist for handle          |
+| `INVALID_HANDLE`           | Handle fails regex validation                     |
+| `SCHEMA_NOT_FOUND`         | Schema name does not exist in `vault/schemas/`    |
+| `SCHEMA_ALREADY_EXISTS`    | Schema with that name already exists              |
+| `INVALID_SCHEMA`           | Schema file is not a valid JSON Schema document   |
+| `SCHEMA_VALIDATION_FAILED` | Content failed schema validation                  |
+| `FILE_NOT_FOUND`           | Input `--file` path does not exist                |
+| `STORAGE_ERROR`            | Filesystem read/write failure                     |
+| `VAULT_NOT_INITIALIZED`    | Vault directory not found; run `publishable init` |
 
 ## Concurrency
 

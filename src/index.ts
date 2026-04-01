@@ -40,7 +40,7 @@ Workflow:
 
 Built-in schemas (used with "export" and "validate"):
 ──────────────────────────────────────────────────────
-  blog      — title, slug, summary, tags required; body must have heading
+  blog      — title, slug, summary, tags required; body required
   linkedin  — title, summary (≤3000 chars) required; body required
   bluesky   — title, summary (≤300 chars) required; body required
   x         — title, summary (≤280 chars) required; body required
