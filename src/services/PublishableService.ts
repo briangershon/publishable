@@ -15,6 +15,10 @@ import type {
   PublishableSchema,
   PublishableSummary,
   PublishableVersion,
+  SchemaCreateResult,
+  SchemaListResult,
+  SchemaShowResult,
+  SchemaUpdateResult,
   ValidationResult,
   VersionFrontmatter,
 } from "../types.js";
@@ -456,6 +460,91 @@ export class PublishableService {
     this.assertValidHandle(handle);
     const meta = await this.readMeta(handle);
     return this.metaToSummary(meta);
+  }
+
+  async schemaList(): Promise<SchemaListResult> {
+    await this.assertVaultInitialized();
+    let entries: string[];
+    try {
+      entries = await this.fs.readdir(this.schemasDir());
+    } catch {
+      return { schemas: [] };
+    }
+    const schemas = entries
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => f.slice(0, -5))
+      .sort();
+    return { schemas };
+  }
+
+  async schemaCreate(
+    name: string,
+    fileContent: string,
+  ): Promise<SchemaCreateResult> {
+    await this.assertVaultInitialized();
+    try {
+      await this.readSchemaFile(name);
+      throw new PublishableError(
+        "SCHEMA_ALREADY_EXISTS",
+        `Schema '${name}' already exists. Use 'publishable schema update' to replace it.`,
+      );
+    } catch (e) {
+      if (!(e instanceof PublishableError) || e.code !== "SCHEMA_NOT_FOUND") {
+        throw e;
+      }
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(fileContent);
+    } catch {
+      throw new PublishableError(
+        "STORAGE_ERROR",
+        `File does not contain valid JSON`,
+      );
+    }
+    const metaResult = this.validator.validateSchemaDocument(parsed);
+    if (!metaResult.valid) {
+      throw new PublishableError(
+        "INVALID_SCHEMA",
+        "File is not a valid JSON Schema",
+        metaResult.errors,
+      );
+    }
+    await this.writeSchemaFile(name, parsed as object);
+    return { name, created: true };
+  }
+
+  async schemaUpdate(
+    name: string,
+    fileContent: string,
+  ): Promise<SchemaUpdateResult> {
+    await this.assertVaultInitialized();
+    await this.readSchemaFile(name);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(fileContent);
+    } catch {
+      throw new PublishableError(
+        "STORAGE_ERROR",
+        `File does not contain valid JSON`,
+      );
+    }
+    const metaResult = this.validator.validateSchemaDocument(parsed);
+    if (!metaResult.valid) {
+      throw new PublishableError(
+        "INVALID_SCHEMA",
+        "File is not a valid JSON Schema",
+        metaResult.errors,
+      );
+    }
+    await this.writeSchemaFile(name, parsed as object);
+    return { name, updated: true };
+  }
+
+  async schemaShow(name: string): Promise<SchemaShowResult> {
+    await this.assertVaultInitialized();
+    const schema = await this.readSchemaFile(name);
+    return { name, schema };
   }
 
   async serializeVersion(version: PublishableVersion): Promise<string> {

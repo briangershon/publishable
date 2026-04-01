@@ -39,6 +39,53 @@ describe("outputSuccess()", () => {
     outputSuccess([], false);
     expect(logSpy.mock.calls[0][0]).toBe("No publishables found.");
   });
+
+  it("prints 'No schemas found.' for empty schema list", () => {
+    outputSuccess({ schemas: [] }, false);
+    expect(logSpy.mock.calls[0][0]).toBe("No schemas found.");
+  });
+
+  it("prints each schema name for non-empty schema list", () => {
+    outputSuccess({ schemas: ["blog", "flabber", "linkedin"] }, false);
+    const lines = logSpy.mock.calls.map((c: unknown[]) => c[0]);
+    expect(lines).toEqual(["blog", "flabber", "linkedin"]);
+  });
+
+  it("prints confirmation for SchemaCreateResult", () => {
+    outputSuccess({ name: "flabber", created: true }, false);
+    expect(logSpy.mock.calls[0][0]).toBe("Schema 'flabber' created.");
+  });
+
+  it("prints confirmation for SchemaUpdateResult", () => {
+    outputSuccess({ name: "flabber", updated: true }, false);
+    expect(logSpy.mock.calls[0][0]).toBe("Schema 'flabber' updated.");
+  });
+
+  it("renders SchemaShowResult in human mode", () => {
+    outputSuccess(
+      {
+        name: "flabber",
+        schema: {
+          title: "Flabber Post",
+          type: "object",
+          required: ["title", "flabber"],
+          properties: {
+            title: { type: "string", description: "Post title" },
+            flabber: { type: "string", description: "Flabber content" },
+          },
+          "x-publishable": { body: { required: false } },
+        },
+      },
+      false,
+    );
+    const lines = logSpy.mock.calls.map((c: unknown[]) => c[0]).join("\n");
+    expect(lines).toContain("name:     flabber");
+    expect(lines).toContain("title:    Flabber Post");
+    expect(lines).toContain("required: title, flabber");
+    expect(lines).toContain("properties:");
+    expect(lines).toContain("body:");
+    expect(lines).toContain("required:       no");
+  });
 });
 
 describe("outputError()", () => {

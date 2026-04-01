@@ -267,6 +267,36 @@ describe("ValidationService", () => {
     });
   });
 
+  describe("validateSchemaDocument()", () => {
+    it("returns valid for a well-formed JSON Schema", () => {
+      const schema = {
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        type: "object",
+        required: ["title"],
+        properties: { title: { type: "string" } },
+      };
+      const result = svc.validateSchemaDocument(schema);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("returns valid for a minimal schema (empty object is valid)", () => {
+      const result = svc.validateSchemaDocument({});
+      expect(result.valid).toBe(true);
+    });
+
+    it("returns invalid when type is wrong (e.g. type: 42)", () => {
+      const result = svc.validateSchemaDocument({ type: 42 });
+      expect(result.valid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+    });
+
+    it("returns invalid for non-object input", () => {
+      const result = svc.validateSchemaDocument("not a schema");
+      expect(result.valid).toBe(false);
+    });
+  });
+
   describe("custom schema", () => {
     const customSchema = {
       $schema: "https://json-schema.org/draft/2020-12/schema",

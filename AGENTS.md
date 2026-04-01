@@ -7,6 +7,7 @@ This file documents key engineering decisions for the `publishable` CLI and rule
 ## CLI Name
 
 The binary is `publishable`. Always use `publishable` in code, docs, and tests.
+Invoke it via `npm run dev --` (e.g. `npm run dev -- update my-post --file draft.md`).
 
 ## Storage Root
 
@@ -150,6 +151,17 @@ Use `vi.spyOn(process, "exit")` to assert on exit calls without actually exiting
 | `npm run check`         | lint + tsc --noEmit + prettier --check + test (**run before committing**) |
 
 Always run `npm run check` before committing or submitting changes.
+
+Run any `publishable` command via `npm run dev --`:
+
+```bash
+npm run dev -- <command> [options]
+# e.g.
+npm run dev -- update my-post --file draft.md
+npm run dev -- export my-post --format md
+```
+
+Never inspect or edit vault files directly. The vault (`~/.publishable/vault/`) is an internal implementation detail — all reads and writes must go through `publishable` commands. Direct edits bypass validation, version tracking, and schema injection.
 
 ## ValidationService Contract
 

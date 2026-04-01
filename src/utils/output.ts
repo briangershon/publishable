@@ -90,6 +90,65 @@ function printHuman(data: unknown): void {
     return;
   }
 
+  // SchemaListResult
+  if ("schemas" in obj && Array.isArray(obj.schemas)) {
+    const names = obj.schemas as string[];
+    if (names.length === 0) {
+      console.log("No schemas found.");
+      return;
+    }
+    for (const name of names) {
+      console.log(name);
+    }
+    return;
+  }
+
+  // SchemaCreateResult
+  if ("name" in obj && "created" in obj) {
+    console.log(`Schema '${obj.name}' created.`);
+    return;
+  }
+
+  // SchemaUpdateResult
+  if ("name" in obj && "updated" in obj) {
+    console.log(`Schema '${obj.name}' updated.`);
+    return;
+  }
+
+  // SchemaShowResult
+  if ("name" in obj && "schema" in obj && typeof obj.schema === "object") {
+    const name = obj.name as string;
+    const s = obj.schema as Record<string, unknown>;
+    console.log(`name:     ${name}`);
+    if (s.title) console.log(`title:    ${s.title}`);
+    const required = s.required as string[] | undefined;
+    if (Array.isArray(required) && required.length > 0) {
+      console.log(`\nrequired: ${required.join(", ")}`);
+    }
+    const props = s.properties as
+      | Record<string, Record<string, unknown>>
+      | undefined;
+    if (props && Object.keys(props).length > 0) {
+      const hasDesc = Object.values(props).some((p) => p.description);
+      console.log("\nproperties:");
+      for (const [key, prop] of Object.entries(props)) {
+        const type = String(prop.type ?? "");
+        const desc = hasDesc ? `   ${String(prop.description ?? "")}` : "";
+        console.log(`  ${key.padEnd(10)} ${type.padEnd(8)}${desc}`);
+      }
+    }
+    const xpub = s["x-publishable"] as Record<string, unknown> | undefined;
+    const body = xpub?.body as Record<string, unknown> | undefined;
+    if (body) {
+      console.log("\nbody:");
+      if (body.required !== undefined)
+        console.log(`  required:       ${body.required ? "yes" : "no"}`);
+      if (body.requireHeading !== undefined)
+        console.log(`  requireHeading: ${body.requireHeading ? "yes" : "no"}`);
+    }
+    return;
+  }
+
   // list result (array)
   if (Array.isArray(data)) {
     if (data.length === 0) {

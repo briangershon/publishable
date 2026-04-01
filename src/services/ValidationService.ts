@@ -1,4 +1,5 @@
 import { Ajv2020 as Ajv } from "ajv/dist/2020.js";
+import type { AnySchema } from "ajv";
 import type {
   PublishableSchema,
   ValidationError,
@@ -64,5 +65,16 @@ export class ValidationService {
     }
 
     return { valid: errors.length === 0, errors };
+  }
+
+  validateSchemaDocument(schema: unknown): ValidationResult {
+    const valid = ajv.validateSchema(schema as AnySchema);
+    if (valid) return { valid: true, errors: [] };
+    const errors: ValidationError[] = (ajv.errors ?? []).map((err) => ({
+      path: err.instancePath.replace(/^\//, "") || "schema",
+      code: err.keyword.toUpperCase(),
+      message: err.message ?? "invalid",
+    }));
+    return { valid: false, errors };
   }
 }

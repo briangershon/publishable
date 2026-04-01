@@ -65,10 +65,31 @@ export type ErrorCode =
   | "VERSION_NOT_FOUND"
   | "INVALID_HANDLE"
   | "SCHEMA_NOT_FOUND"
+  | "SCHEMA_ALREADY_EXISTS"
+  | "INVALID_SCHEMA"
   | "SCHEMA_VALIDATION_FAILED"
   | "FILE_NOT_FOUND"
   | "STORAGE_ERROR"
   | "VAULT_NOT_INITIALIZED";
+
+export interface SchemaShowResult {
+  name: string;
+  schema: PublishableSchema;
+}
+
+export interface SchemaListResult {
+  schemas: string[];
+}
+
+export interface SchemaCreateResult {
+  name: string;
+  created: true;
+}
+
+export interface SchemaUpdateResult {
+  name: string;
+  updated: true;
+}
 
 export interface SuccessOutput<T> {
   ok: true;

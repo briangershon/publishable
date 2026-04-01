@@ -11,6 +11,12 @@ import { revertCommand } from "./commands/revert.js";
 import { listCommand } from "./commands/list.js";
 import { getCommand } from "./commands/get.js";
 import { exportCommand } from "./commands/export.js";
+import {
+  schemaShowCommand,
+  schemaListCommand,
+  schemaCreateCommand,
+  schemaUpdateCommand,
+} from "./commands/schema.js";
 
 const program = new Command();
 
@@ -40,8 +46,7 @@ Built-in schemas (used with "export" and "validate"):
   x         — title, summary (≤280 chars) required; body required
 
 Custom schemas:
-  Drop any JSON Schema 2020-12 file into {vault}/schemas/<name>.json,
-  then use --schema <name> to validate against it.
+  Use "publishable schema --help" to list, create, and update schemas.
 
 Example blog file:
 ──────────────────
@@ -200,5 +205,69 @@ program
   .description("Read publishable metadata")
   .option("--json", "Output as JSON")
   .action(getCommand);
+
+const schemaCmd = program
+  .command("schema")
+  .description("Manage schemas in the vault");
+
+schemaCmd
+  .command("show <name>")
+  .description("Show schema details")
+  .option("--json", "Output full JSON Schema")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  publishable schema show blog
+  publishable schema show blog --json
+`,
+  )
+  .action(schemaShowCommand);
+
+schemaCmd
+  .command("list")
+  .description("List all available schemas in the vault")
+  .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  publishable schema list
+  publishable schema list --json
+`,
+  )
+  .action(schemaListCommand);
+
+schemaCmd
+  .command("create <name>")
+  .description("Create a new schema from a JSON file")
+  .requiredOption("--file <file>", "Path to JSON Schema file")
+  .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  publishable schema create newsletter --file newsletter.json
+
+Note: Fails if the schema already exists. Use "schema update" to replace it.
+`,
+  )
+  .action(schemaCreateCommand);
+
+schemaCmd
+  .command("update <name>")
+  .description("Update an existing schema from a JSON file")
+  .requiredOption("--file <file>", "Path to JSON Schema file")
+  .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  publishable schema update newsletter --file newsletter.json
+
+Note: Fails if the schema does not exist. Use "schema create" to add a new one.
+`,
+  )
+  .action(schemaUpdateCommand);
 
 program.parse();

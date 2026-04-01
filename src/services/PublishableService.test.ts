@@ -260,4 +260,165 @@ Body content.
       ).rejects.toMatchObject({ code: "PUBLISHABLE_NOT_FOUND" });
     });
   });
+
+  describe("schemaShow()", () => {
+    it("returns name and schema object for an existing schema", async () => {
+      const result = await svc.schemaShow("blog");
+      expect(result.name).toBe("blog");
+      expect(result.schema).toBeDefined();
+      expect(typeof result.schema).toBe("object");
+    });
+
+    it("throws SCHEMA_NOT_FOUND for a missing schema", async () => {
+      await expect(svc.schemaShow("nonexistent")).rejects.toMatchObject({
+        code: "SCHEMA_NOT_FOUND",
+      });
+    });
+
+    it("throws VAULT_NOT_INITIALIZED when vault does not exist", async () => {
+      const uninitSvc = new PublishableService(
+        "/nonexistent",
+        new InMemoryFileSystem(),
+      );
+      await expect(uninitSvc.schemaShow("blog")).rejects.toMatchObject({
+        code: "VAULT_NOT_INITIALIZED",
+      });
+    });
+  });
+
+  describe("schemaList()", () => {
+    it("returns built-in schemas after init", async () => {
+      const result = await svc.schemaList();
+      expect(result.schemas).toContain("blog");
+      expect(result.schemas).toContain("linkedin");
+      expect(result.schemas).toContain("bluesky");
+      expect(result.schemas).toContain("x");
+    });
+
+    it("returns sorted schema names", async () => {
+      const result = await svc.schemaList();
+      const sorted = [...result.schemas].sort();
+      expect(result.schemas).toEqual(sorted);
+    });
+
+    it("returns empty list when schemas directory does not exist", async () => {
+      const emptyFs = new InMemoryFileSystem();
+      const emptySvc = new PublishableService("/vault", emptyFs);
+      await emptyFs.mkdir("/vault", { recursive: true });
+      const result = await emptySvc.schemaList();
+      expect(result.schemas).toEqual([]);
+    });
+
+    it("throws VAULT_NOT_INITIALIZED when vault does not exist", async () => {
+      const uninitSvc = new PublishableService(
+        "/nonexistent",
+        new InMemoryFileSystem(),
+      );
+      await expect(uninitSvc.schemaList()).rejects.toMatchObject({
+        code: "VAULT_NOT_INITIALIZED",
+      });
+    });
+  });
+
+  describe("schemaCreate()", () => {
+    const validSchema = JSON.stringify({
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      title: "Flabber",
+      type: "object",
+      required: ["title", "flabber"],
+      properties: {
+        title: { type: "string" },
+        flabber: { type: "string" },
+      },
+    });
+
+    it("creates a new schema and returns created: true", async () => {
+      const result = await svc.schemaCreate("flabber", validSchema);
+      expect(result).toEqual({ name: "flabber", created: true });
+    });
+
+    it("schema is listable after creation", async () => {
+      await svc.schemaCreate("flabber", validSchema);
+      const list = await svc.schemaList();
+      expect(list.schemas).toContain("flabber");
+    });
+
+    it("throws SCHEMA_ALREADY_EXISTS when schema already exists", async () => {
+      await svc.schemaCreate("flabber", validSchema);
+      await expect(
+        svc.schemaCreate("flabber", validSchema),
+      ).rejects.toMatchObject({
+        code: "SCHEMA_ALREADY_EXISTS",
+      });
+    });
+
+    it("throws STORAGE_ERROR for invalid JSON", async () => {
+      await expect(svc.schemaCreate("bad", "not json")).rejects.toMatchObject({
+        code: "STORAGE_ERROR",
+      });
+    });
+
+    it("throws INVALID_SCHEMA when JSON is not a valid JSON Schema", async () => {
+      await expect(
+        svc.schemaCreate("bad", JSON.stringify({ type: 42 })),
+      ).rejects.toMatchObject({ code: "INVALID_SCHEMA" });
+    });
+
+    it("throws VAULT_NOT_INITIALIZED when vault does not exist", async () => {
+      const uninitSvc = new PublishableService(
+        "/nonexistent",
+        new InMemoryFileSystem(),
+      );
+      await expect(
+        uninitSvc.schemaCreate("flabber", validSchema),
+      ).rejects.toMatchObject({
+        code: "VAULT_NOT_INITIALIZED",
+      });
+    });
+  });
+
+  describe("schemaUpdate()", () => {
+    const v1 = JSON.stringify({ title: "V1", type: "object" });
+    const v2 = JSON.stringify({ title: "V2", type: "object" });
+
+    it("updates an existing schema and returns updated: true", async () => {
+      await svc.schemaCreate("flabber", v1);
+      const result = await svc.schemaUpdate("flabber", v2);
+      expect(result).toEqual({ name: "flabber", updated: true });
+    });
+
+    it("throws SCHEMA_NOT_FOUND when schema does not exist", async () => {
+      await expect(svc.schemaUpdate("nonexistent", v1)).rejects.toMatchObject({
+        code: "SCHEMA_NOT_FOUND",
+      });
+    });
+
+    it("throws STORAGE_ERROR for invalid JSON", async () => {
+      await svc.schemaCreate("flabber", v1);
+      await expect(
+        svc.schemaUpdate("flabber", "not json"),
+      ).rejects.toMatchObject({
+        code: "STORAGE_ERROR",
+      });
+    });
+
+    it("throws INVALID_SCHEMA when JSON is not a valid JSON Schema", async () => {
+      await svc.schemaCreate("flabber", v1);
+      await expect(
+        svc.schemaUpdate("flabber", JSON.stringify({ type: 42 })),
+      ).rejects.toMatchObject({ code: "INVALID_SCHEMA" });
+    });
+
+    it("throws VAULT_NOT_INITIALIZED when vault does not exist", async () => {
+      const uninitSvc = new PublishableService(
+        "/nonexistent",
+        new InMemoryFileSystem(),
+      );
+      await expect(uninitSvc.schemaUpdate("flabber", v1)).rejects.toMatchObject(
+        {
+          code: "VAULT_NOT_INITIALIZED",
+        },
+      );
+    });
+  });
 });
