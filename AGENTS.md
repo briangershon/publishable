@@ -4,6 +4,20 @@ This file documents key engineering decisions for the `publishable` CLI and rule
 
 ---
 
+## Documentation Scope
+
+Each file has a distinct, non-overlapping purpose. Do not add content to a file that belongs in another.
+
+| File        | Audience                                              | Contains                                                     |
+| ----------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| `--help`    | CLI users / agents running the tool                   | Canonical command reference: all commands, options, formats  |
+| `README.md` | GitHub browsers / developers discovering the project  | Tagline, install, minimal quickstart, built-in schemas table |
+| `AGENTS.md` | Developers / AI coding agents working on the codebase | Engineering rules, architecture decisions, test patterns     |
+
+If you are adding a new command or option, update the CLI help text — not README or AGENTS.md.
+
+---
+
 ## CLI Name
 
 The binary is `publishable`. Always use `publishable` in code, docs, and tests.

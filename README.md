@@ -17,65 +17,20 @@ npm install -g @briangershon/publishable
 npx @briangershon/publishable --help
 ```
 
-## Workflow
-
-### 1. Set up your vault (first time only)
+## Quickstart
 
 ```bash
-publishable init
-```
-
-### 2. Write and save drafts freely
-
-Create a markdown file with your content. Frontmatter fields are optional while drafting — no validation happens at save time.
-
-```bash
+# Save a draft (no validation, iterate freely)
 publishable update my-post --file draft.md
+
+# Export when ready (validates + renders clean output)
+publishable export my-post --format md
+
+# See all commands
+publishable --help
 ```
 
-Keep iterating. Every save creates a new version in the vault:
-
-```bash
-publishable update my-post --file draft.md --message "Improve intro"
-```
-
-Review your version history at any time:
-
-```bash
-publishable versions my-post
-publishable show my-post 1
-```
-
-### 3. Check for errors (optional)
-
-```bash
-publishable validate my-post --schema blog
-```
-
-This is a dry-run — it always exits 0 and never saves anything.
-
-### 4. Export when ready
-
-`export` validates and renders clean output in one step. It exits non-zero if validation fails, so you know the content is ready before you use it.
-
-```bash
-# Clean markdown for Hugo, Jekyll, Astro, or any file-based blog
-publishable export my-post --format md --output final.md
-
-# Just the body text — paste into LinkedIn, Bluesky, X
-publishable export my-post --format body
-
-# Structured JSON for a CMS API or pipeline
-publishable export my-post --format json
-```
-
-To target a specific schema:
-
-```bash
-publishable export my-li-post --schema linkedin --format body
-```
-
-### Built-in schemas
+## Built-in schemas
 
 | Schema           | Required fields                    | Body                        |
 | ---------------- | ---------------------------------- | --------------------------- |
