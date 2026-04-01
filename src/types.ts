@@ -10,7 +10,6 @@ export type BuiltinSchemaType = (typeof BUILTIN_SCHEMA_TYPES)[number];
 
 export interface PublishableSchemaBody {
   required?: boolean;
-  requireHeading?: boolean;
 }
 
 export interface PublishableSchema {

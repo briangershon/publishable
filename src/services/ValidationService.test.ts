@@ -27,15 +27,6 @@ describe("ValidationService", () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it("accepts heading levels 1-6", () => {
-      for (let i = 1; i <= 6; i++) {
-        const body = `${"#".repeat(i)} Heading\n\ncontent`;
-        expect(
-          svc.validate(validBlogFrontmatter, body, BLOG_SCHEMA).valid,
-        ).toBe(true);
-      }
-    });
-
     it("accepts single-word slug", () => {
       const fm = { ...validBlogFrontmatter, slug: "post" };
       expect(svc.validate(fm, validBody, BLOG_SCHEMA).valid).toBe(true);
@@ -138,23 +129,13 @@ describe("ValidationService", () => {
       );
     });
 
-    it("reports body without heading", () => {
+    it("accepts body without heading", () => {
       const result = svc.validate(
         validBlogFrontmatter,
         bodyNoHeading,
         BLOG_SCHEMA,
       );
-      expect(result.valid).toBe(false);
-      expect(result.errors.find((e) => e.path === "body")?.code).toBe(
-        "INVALID_FORMAT",
-      );
-    });
-
-    it("does not flag heading check when body is empty", () => {
-      const result = svc.validate(validBlogFrontmatter, "", BLOG_SCHEMA);
-      const bodyErrors = result.errors.filter((e) => e.path === "body");
-      expect(bodyErrors).toHaveLength(1);
-      expect(bodyErrors[0].code).toBe("REQUIRED");
+      expect(result.valid).toBe(true);
     });
   });
 
@@ -207,15 +188,6 @@ describe("ValidationService", () => {
       const result = svc.validate(fm, bodyNoHeading, LINKEDIN_SCHEMA);
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.path === "title")).toBe(true);
-    });
-
-    it("does not require heading in body", () => {
-      const result = svc.validate(
-        validLinkedInFm,
-        "Just a plain post.",
-        LINKEDIN_SCHEMA,
-      );
-      expect(result.valid).toBe(true);
     });
   });
 
@@ -308,7 +280,7 @@ describe("ValidationService", () => {
         summary: { type: "string", minLength: 1, maxLength: 500 },
       },
       "x-publishable": {
-        body: { required: true, requireHeading: false },
+        body: { required: true },
       },
     };
 

@@ -43,7 +43,6 @@ export class ValidationService {
 
     const bodyRules = schema["x-publishable"]?.body;
     const bodyRequired = bodyRules?.required !== false;
-    const requireHeading = bodyRules?.requireHeading === true;
 
     const trimmedBody = body.trim();
     if (bodyRequired && trimmedBody.length === 0) {
@@ -51,16 +50,6 @@ export class ValidationService {
         path: "body",
         code: "REQUIRED",
         message: "Body must not be empty",
-      });
-    } else if (
-      requireHeading &&
-      trimmedBody.length > 0 &&
-      !/^#{1,6}\s/m.test(trimmedBody)
-    ) {
-      errors.push({
-        path: "body",
-        code: "INVALID_FORMAT",
-        message: "Body must contain at least one markdown heading",
       });
     }
 

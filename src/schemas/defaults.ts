@@ -23,7 +23,7 @@ export const BLOG_SCHEMA = {
     },
   },
   "x-publishable": {
-    body: { required: true, requireHeading: true },
+    body: { required: true },
   },
 };
 
@@ -51,7 +51,7 @@ export const LINKEDIN_SCHEMA = {
     },
   },
   "x-publishable": {
-    body: { required: true, requireHeading: false },
+    body: { required: true },
   },
 };
 
@@ -79,7 +79,7 @@ export const BLUESKY_SCHEMA = {
     },
   },
   "x-publishable": {
-    body: { required: true, requireHeading: false },
+    body: { required: true },
   },
 };
 
@@ -107,7 +107,7 @@ export const X_SCHEMA = {
     },
   },
   "x-publishable": {
-    body: { required: true, requireHeading: false },
+    body: { required: true },
   },
 };
 

@@ -143,8 +143,6 @@ function printHuman(data: unknown): void {
       console.log("\nbody:");
       if (body.required !== undefined)
         console.log(`  required:       ${body.required ? "yes" : "no"}`);
-      if (body.requireHeading !== undefined)
-        console.log(`  requireHeading: ${body.requireHeading ? "yes" : "no"}`);
     }
     return;
   }
