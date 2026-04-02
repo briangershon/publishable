@@ -60,6 +60,21 @@ export async function schemaCreateCommand(
   }
 }
 
+export async function schemaCustomizeCommand(
+  name: string,
+  opts: { force?: boolean; json?: boolean },
+): Promise<void> {
+  const service = new PublishableService();
+  const useJson = opts.json ?? false;
+  try {
+    const result = await service.schemaCustomize(name, opts.force ?? false);
+    outputSuccess(result, useJson);
+  } catch (e) {
+    if (e instanceof PublishableError) outputError(e, useJson);
+    throw e;
+  }
+}
+
 export async function schemaUpdateCommand(
   name: string,
   opts: { file: string; json?: boolean },

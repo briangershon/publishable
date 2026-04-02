@@ -287,26 +287,54 @@ Body content.
   });
 
   describe("schemaList()", () => {
-    it("returns built-in schemas after init", async () => {
+    it("returns built-in schemas with source=default after init", async () => {
       const result = await svc.schemaList();
-      expect(result.schemas).toContain("blog");
-      expect(result.schemas).toContain("linkedin");
-      expect(result.schemas).toContain("bluesky");
-      expect(result.schemas).toContain("x");
+      const names = result.schemas.map((s) => s.name);
+      expect(names).toContain("blog");
+      expect(names).toContain("linkedin");
+      expect(names).toContain("bluesky");
+      expect(names).toContain("x");
+      expect(result.schemas.find((s) => s.name === "blog")?.source).toBe(
+        "default",
+      );
     });
 
-    it("returns sorted schema names", async () => {
+    it("returns sorted schema entries", async () => {
       const result = await svc.schemaList();
-      const sorted = [...result.schemas].sort();
+      const sorted = [...result.schemas].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
       expect(result.schemas).toEqual(sorted);
     });
 
-    it("returns empty list when schemas directory does not exist", async () => {
+    it("returns built-in defaults even when schemas directory does not exist", async () => {
       const emptyFs = new InMemoryFileSystem();
       const emptySvc = new PublishableService("/vault", emptyFs);
       await emptyFs.mkdir("/vault", { recursive: true });
       const result = await emptySvc.schemaList();
-      expect(result.schemas).toEqual([]);
+      const names = result.schemas.map((s) => s.name);
+      expect(names).toContain("blog");
+      expect(result.schemas.every((s) => s.source === "default")).toBe(true);
+    });
+
+    it("marks customized built-in schema as custom", async () => {
+      await svc.schemaCustomize("blog");
+      const result = await svc.schemaList();
+      expect(result.schemas.find((s) => s.name === "blog")?.source).toBe(
+        "custom",
+      );
+    });
+
+    it("includes custom non-built-in schemas", async () => {
+      const validSchema = JSON.stringify({
+        $schema: "https://json-schema.org/draft/2020-12/schema",
+        title: "Newsletter",
+        type: "object",
+      });
+      await svc.schemaCreate("newsletter", validSchema);
+      const result = await svc.schemaList();
+      const entry = result.schemas.find((s) => s.name === "newsletter");
+      expect(entry?.source).toBe("custom");
     });
 
     it("throws VAULT_NOT_INITIALIZED when vault does not exist", async () => {
@@ -340,7 +368,7 @@ Body content.
     it("schema is listable after creation", async () => {
       await svc.schemaCreate("flabber", validSchema);
       const list = await svc.schemaList();
-      expect(list.schemas).toContain("flabber");
+      expect(list.schemas.map((s) => s.name)).toContain("flabber");
     });
 
     it("throws SCHEMA_ALREADY_EXISTS when schema already exists", async () => {
@@ -419,6 +447,51 @@ Body content.
           code: "VAULT_NOT_INITIALIZED",
         },
       );
+    });
+  });
+
+  describe("schemaCustomize()", () => {
+    it("writes a built-in schema to disk and returns name and path", async () => {
+      const result = await svc.schemaCustomize("blog");
+      expect(result.name).toBe("blog");
+      expect(result.path).toContain("blog.json");
+    });
+
+    it("schema is now marked custom in schemaList", async () => {
+      await svc.schemaCustomize("blog");
+      const list = await svc.schemaList();
+      expect(list.schemas.find((s) => s.name === "blog")?.source).toBe(
+        "custom",
+      );
+    });
+
+    it("throws SCHEMA_ALREADY_EXISTS when file already exists", async () => {
+      await svc.schemaCustomize("blog");
+      await expect(svc.schemaCustomize("blog")).rejects.toMatchObject({
+        code: "SCHEMA_ALREADY_EXISTS",
+      });
+    });
+
+    it("overwrites when force=true", async () => {
+      await svc.schemaCustomize("blog");
+      const result = await svc.schemaCustomize("blog", true);
+      expect(result.name).toBe("blog");
+    });
+
+    it("throws SCHEMA_NOT_FOUND for non-built-in name", async () => {
+      await expect(svc.schemaCustomize("nonexistent")).rejects.toMatchObject({
+        code: "SCHEMA_NOT_FOUND",
+      });
+    });
+
+    it("throws VAULT_NOT_INITIALIZED when vault does not exist", async () => {
+      const uninitSvc = new PublishableService(
+        "/nonexistent",
+        new InMemoryFileSystem(),
+      );
+      await expect(uninitSvc.schemaCustomize("blog")).rejects.toMatchObject({
+        code: "VAULT_NOT_INITIALIZED",
+      });
     });
   });
 });

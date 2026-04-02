@@ -76,8 +76,18 @@ export interface SchemaShowResult {
   schema: PublishableSchema;
 }
 
+export interface SchemaEntry {
+  name: string;
+  source: "default" | "custom";
+}
+
 export interface SchemaListResult {
-  schemas: string[];
+  schemas: SchemaEntry[];
+}
+
+export interface SchemaCustomizeResult {
+  name: string;
+  path: string;
 }
 
 export interface SchemaCreateResult {

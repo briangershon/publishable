@@ -92,14 +92,28 @@ function printHuman(data: unknown): void {
 
   // SchemaListResult
   if ("schemas" in obj && Array.isArray(obj.schemas)) {
-    const names = obj.schemas as string[];
-    if (names.length === 0) {
+    const entries = obj.schemas as Array<{ name: string; source: string }>;
+    if (entries.length === 0) {
       console.log("No schemas found.");
       return;
     }
-    for (const name of names) {
-      console.log(name);
+    for (const entry of entries) {
+      if (typeof entry === "object" && "source" in entry) {
+        const tag = entry.source === "custom" ? "[custom]  " : "[default] ";
+        console.log(`${tag} ${entry.name}`);
+      } else {
+        console.log(String(entry));
+      }
     }
+    return;
+  }
+
+  // SchemaCustomizeResult
+  if ("name" in obj && "path" in obj && typeof obj.path === "string") {
+    console.log(`Schema '${obj.name}' written to ${obj.path}`);
+    console.log(
+      `Edit it freely — publishable will use your custom version over the built-in default.`,
+    );
     return;
   }
 

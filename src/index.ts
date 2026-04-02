@@ -15,6 +15,7 @@ import {
   schemaShowCommand,
   schemaListCommand,
   schemaCreateCommand,
+  schemaCustomizeCommand,
   schemaUpdateCommand,
 } from "./commands/schema.js";
 
@@ -85,11 +86,11 @@ program
   .addHelpText(
     "after",
     `
-Run this first to set up your publishable vault. Creates the vault directory
-and installs default JSON Schema files into {vault}/schemas/:
-  blog.json, linkedin.json, bluesky.json, x.json
+Run this first to set up your publishable vault. Creates the vault directory.
 
-Safe to re-run — already-existing schemas are not overwritten.
+Built-in schemas (blog, linkedin, bluesky, x) are available immediately — no
+files are written. To customize a built-in schema, run:
+  publishable schema customize <name>
 `,
   )
   .action(initCommand);
@@ -237,6 +238,25 @@ Examples:
 `,
   )
   .action(schemaListCommand);
+
+schemaCmd
+  .command("customize <name>")
+  .description("Write a built-in schema to disk for customization")
+  .option("--force", "Overwrite an existing custom schema file")
+  .option("--json", "Output as JSON")
+  .addHelpText(
+    "after",
+    `
+Copies the built-in default schema to {vault}/schemas/<name>.json so you can
+edit it. Once the file exists, publishable uses your version instead of the
+built-in default.
+
+Examples:
+  publishable schema customize blog
+  publishable schema customize blog --force
+`,
+  )
+  .action(schemaCustomizeCommand);
 
 schemaCmd
   .command("create <name>")

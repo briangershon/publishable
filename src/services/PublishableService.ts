@@ -16,6 +16,7 @@ import type {
   PublishableSummary,
   PublishableVersion,
   SchemaCreateResult,
+  SchemaCustomizeResult,
   SchemaListResult,
   SchemaShowResult,
   SchemaUpdateResult,
@@ -191,11 +192,23 @@ export class PublishableService {
   }
 
   private async readSchemaFile(name: string): Promise<PublishableSchema> {
-    const content = await this.readFileOrThrow(
-      this.schemaPath(name),
-      "SCHEMA_NOT_FOUND",
-      `Schema '${name}' not found. Run 'publishable init' to create default schemas, or add ${name}.json to ${this.schemasDir()}`,
-    );
+    let content: string;
+    try {
+      content = await this.readFileOrThrow(
+        this.schemaPath(name),
+        "SCHEMA_NOT_FOUND",
+        `Schema '${name}' not found. Add ${name}.json to ${this.schemasDir()}, or run 'publishable schema customize ${name}' if it is a built-in.`,
+      );
+    } catch (e) {
+      if (
+        e instanceof PublishableError &&
+        e.code === "SCHEMA_NOT_FOUND" &&
+        name in DEFAULT_SCHEMAS
+      ) {
+        return DEFAULT_SCHEMAS[name] as PublishableSchema;
+      }
+      throw e;
+    }
     try {
       return JSON.parse(content) as PublishableSchema;
     } catch {
@@ -371,22 +384,9 @@ export class PublishableService {
     return { ...result, schema: resolvedSchema };
   }
 
-  async init(): Promise<{ schemas: string[]; created: string[] }> {
+  async init(): Promise<{ schemas: string[] }> {
     await this.ensureVaultDir();
-    const created: string[] = [];
-    for (const [name, schemaObj] of Object.entries(DEFAULT_SCHEMAS)) {
-      try {
-        await this.readSchemaFile(name);
-      } catch (e) {
-        if (e instanceof PublishableError && e.code === "SCHEMA_NOT_FOUND") {
-          await this.writeSchemaFile(name, schemaObj);
-          created.push(name);
-        } else {
-          throw e;
-        }
-      }
-    }
-    return { schemas: Object.keys(DEFAULT_SCHEMAS), created };
+    return { schemas: Object.keys(DEFAULT_SCHEMAS) };
   }
 
   async versions(
@@ -464,16 +464,25 @@ export class PublishableService {
 
   async schemaList(): Promise<SchemaListResult> {
     await this.assertVaultInitialized();
-    let entries: string[];
+    const onDisk = new Set<string>();
     try {
-      entries = await this.fs.readdir(this.schemasDir());
+      const entries = await this.fs.readdir(this.schemasDir());
+      for (const f of entries) {
+        if (f.endsWith(".json")) onDisk.add(f.slice(0, -5));
+      }
     } catch {
-      return { schemas: [] };
+      // schemas dir may not exist yet
     }
-    const schemas = entries
-      .filter((f) => f.endsWith(".json"))
-      .map((f) => f.slice(0, -5))
-      .sort();
+    const all = new Map<string, "default" | "custom">();
+    for (const name of Object.keys(DEFAULT_SCHEMAS)) {
+      all.set(name, onDisk.has(name) ? "custom" : "default");
+    }
+    for (const name of onDisk) {
+      if (!all.has(name)) all.set(name, "custom");
+    }
+    const schemas = [...all.entries()]
+      .map(([name, source]) => ({ name, source }))
+      .sort((a, b) => a.name.localeCompare(b.name));
     return { schemas };
   }
 
@@ -545,6 +554,39 @@ export class PublishableService {
     await this.assertVaultInitialized();
     const schema = await this.readSchemaFile(name);
     return { name, schema };
+  }
+
+  async schemaCustomize(
+    name: string,
+    force = false,
+  ): Promise<SchemaCustomizeResult> {
+    await this.assertVaultInitialized();
+    if (!(name in DEFAULT_SCHEMAS)) {
+      throw new PublishableError(
+        "SCHEMA_NOT_FOUND",
+        `'${name}' is not a built-in schema. Built-in schemas: ${Object.keys(DEFAULT_SCHEMAS).join(", ")}`,
+      );
+    }
+    if (!force) {
+      try {
+        await this.readFileOrThrow(
+          this.schemaPath(name),
+          "SCHEMA_NOT_FOUND",
+          "",
+        );
+        throw new PublishableError(
+          "SCHEMA_ALREADY_EXISTS",
+          `Schema '${name}' is already customized. Use --force to overwrite.`,
+        );
+      } catch (e) {
+        if (!(e instanceof PublishableError) || e.code !== "SCHEMA_NOT_FOUND") {
+          throw e;
+        }
+        // SCHEMA_NOT_FOUND means no custom file yet — proceed
+      }
+    }
+    await this.writeSchemaFile(name, DEFAULT_SCHEMAS[name]);
+    return { name, path: this.schemaPath(name) };
   }
 
   async serializeVersion(version: PublishableVersion): Promise<string> {
