@@ -6,8 +6,6 @@ const validMarkdown = `---
 title: "My Post"
 slug: my-post
 summary: "A short summary."
-tags:
-  - test
 ---
 # My Post
 
@@ -60,8 +58,6 @@ describe("PublishableService", () => {
       const noTitle = `---
 slug: my-post
 summary: "A summary."
-tags:
-  - test
 ---
 # My Post
 
@@ -142,7 +138,6 @@ Body content.
       expect(version.body.trim()).toBe("# My Post\n\nBody content here.");
       expect(version.frontmatter.slug).toBe("my-post");
       expect(version.frontmatter.summary).toBe("A short summary.");
-      expect(version.frontmatter.tags).toEqual(["test"]);
     });
   });
 

@@ -2,7 +2,7 @@ export const BLOG_SCHEMA = {
   $schema: "https://json-schema.org/draft/2020-12/schema",
   title: "Blog Post",
   type: "object",
-  required: ["title", "slug", "summary", "tags"],
+  required: ["title", "slug", "summary"],
   properties: {
     title: { type: "string", minLength: 1, description: "Post title" },
     slug: {
@@ -14,12 +14,6 @@ export const BLOG_SCHEMA = {
       type: "string",
       minLength: 1,
       description: "Short description of the post",
-    },
-    tags: {
-      type: "array",
-      items: { type: "string", minLength: 1 },
-      minItems: 1,
-      description: "List of topic tags",
     },
   },
   "x-publishable": {

@@ -11,7 +11,6 @@ const validBlogFrontmatter = {
   title: "My Post",
   slug: "my-post",
   summary: "A short summary.",
-  tags: ["ai", "test"],
 };
 
 const validBody = "# My Post\n\nSome content here.";
@@ -53,13 +52,6 @@ describe("ValidationService", () => {
       expect(result.errors.some((e) => e.path === "summary")).toBe(true);
     });
 
-    it("reports missing tags", () => {
-      const { tags: _, ...fm } = validBlogFrontmatter;
-      const result = svc.validate(fm, validBody, BLOG_SCHEMA);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.path === "tags")).toBe(true);
-    });
-
     it("reports empty title", () => {
       const fm = { ...validBlogFrontmatter, title: "" };
       const result = svc.validate(fm, validBody, BLOG_SCHEMA);
@@ -72,13 +64,6 @@ describe("ValidationService", () => {
       const result = svc.validate(fm, validBody, BLOG_SCHEMA);
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.path === "summary")).toBe(true);
-    });
-
-    it("reports empty tags array", () => {
-      const fm = { ...validBlogFrontmatter, tags: [] };
-      const result = svc.validate(fm, validBody, BLOG_SCHEMA);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.path === "tags")).toBe(true);
     });
 
     it("rejects uppercase in slug", () => {
@@ -110,7 +95,7 @@ describe("ValidationService", () => {
     it("reports multiple errors at once", () => {
       const result = svc.validate({}, validBody, BLOG_SCHEMA);
       expect(result.valid).toBe(false);
-      expect(result.errors.length).toBeGreaterThanOrEqual(4);
+      expect(result.errors.length).toBeGreaterThanOrEqual(3);
     });
   });
 
