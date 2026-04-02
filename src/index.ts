@@ -122,18 +122,18 @@ program
   .command("validate <handle>")
   .description("Validate the current version of a publishable against a schema")
   .option("--schema <type>", "Schema to validate against (e.g. blog)")
+  .option("--no-schema", "Skip schema validation explicitly")
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
 Examples:
-  publishable validate my-post
   publishable validate my-post --schema blog
-  publishable validate my-post --json
+  publishable validate my-social-post --no-schema
+  publishable validate my-post --schema blog --json
 
-Note: Always exits 0 — this is a dry-run inspection tool. Use "export" to
+Note: Always exits 0 on valid/invalid content (dry-run). Use "export" to
       validate and get output in one step (exits non-zero on invalid content).
-      Omit --schema to skip validation and inspect structure only.
 `,
   )
   .action(validateCommand);
@@ -147,14 +147,14 @@ program
     "md",
   )
   .option("--schema <type>", "Schema to validate against (e.g. blog)")
+  .option("--no-schema", "Skip schema validation explicitly")
   .option("--output <file>", "Write output to file instead of stdout")
   .option("--json", "Output as JSON envelope")
   .addHelpText(
     "after",
     `
-Outputs clean content. When --schema is provided, validates first and exits
-non-zero if validation fails. Omit --schema for body-only content (no
-frontmatter validation required).
+Outputs clean content. Use --schema to validate first (exits non-zero on
+failure), or --no-schema for body-only content with no frontmatter validation.
 
 Formats:
   md    — content-only frontmatter (title, slug, summary) + body
@@ -163,8 +163,8 @@ Formats:
 
 Examples:
   publishable export my-post --schema blog
-  publishable export my-social-post --format body
-  publishable export my-post --format md --output clean.md
+  publishable export my-post --schema blog --format md --output clean.md
+  publishable export my-social-post --no-schema --format body
 `,
   )
   .action(exportCommand);

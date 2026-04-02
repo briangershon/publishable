@@ -68,7 +68,7 @@ Metadata files (`publishable.md`) contain only frontmatter with an empty body.
 
 There is 1 built-in schema: `blog`. It is defined in `src/schemas/defaults.ts`. Schemas are **not** written to disk during `init` — they are only created when a user customizes one via `publishable schema customize <name>`.
 
-`--schema` is optional on `validate` and `export`. When omitted, frontmatter validation is skipped and content is exported as-is. This is the intended workflow for body-only content (social posts, etc.).
+Every `validate` and `export` invocation requires an explicit choice: `--schema <name>` to validate, or `--no-schema` to skip validation. Omitting both is an error. This ensures validation intent is always visible in scripts and command history.
 
 The `schema: {name}/v1` field in version files (e.g. `schema: blog/v1`) is **injected by the CLI** during write. It is NOT required in the user's input markdown file. The ValidationService does not check for it.
 
@@ -77,8 +77,8 @@ The `schema: {name}/v1` field in version files (e.g. `schema: blog/v1`) is **inj
 Content moves through three stages:
 
 1. **`update`** — Saves content without any validation. Use freely while drafting. Always succeeds (no schema checks).
-2. **`validate`** — Dry-run schema inspection. Reports errors but always exits `0`. Use to check content before committing. Omit `--schema` to skip validation.
-3. **`export`** — Outputs clean content. When `--schema` is provided, validates strictly and exits non-zero if validation fails. Omit `--schema` to export body-only content without validation.
+2. **`validate`** — Dry-run schema inspection. Reports errors but always exits `0`. Requires `--schema <name>` or `--no-schema`.
+3. **`export`** — Outputs clean content. Requires `--schema <name>` or `--no-schema`. With `--schema`, validates strictly and exits non-zero if validation fails.
 
 Export formats (`--format`):
 
@@ -189,6 +189,7 @@ Never inspect or edit vault files directly. The vault (`~/.publishable/vault/`) 
 | `INVALID_HANDLE`           | Handle fails regex validation                     |
 | `SCHEMA_NOT_FOUND`         | Schema name does not exist in `vault/schemas/`    |
 | `SCHEMA_ALREADY_EXISTS`    | Schema with that name already exists              |
+| `SCHEMA_REQUIRED`          | Neither `--schema` nor `--no-schema` was provided |
 | `INVALID_SCHEMA`           | Schema file is not a valid JSON Schema document   |
 | `SCHEMA_VALIDATION_FAILED` | Content failed schema validation                  |
 | `FILE_NOT_FOUND`           | Input `--file` path does not exist                |

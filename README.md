@@ -34,7 +34,7 @@ publishable --help
 
 Built-in schema: `blog`. Run `publishable schema show blog` to inspect it.
 
-Social and body-only content (LinkedIn, Bluesky, X, etc.) doesn't require a schema — omit `--schema` on `validate` and `export` to skip frontmatter validation and export body content directly.
+Social and body-only content (LinkedIn, Bluesky, X, etc.) doesn't require a schema — use `--no-schema` on `validate` and `export` to explicitly skip frontmatter validation.
 
 Custom schemas: run `publishable schema --help` for details.
 

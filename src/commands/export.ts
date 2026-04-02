@@ -8,6 +8,7 @@ export async function exportCommand(
   opts: {
     format?: string;
     schema?: string;
+    noSchema?: boolean;
     output?: string;
     json?: boolean;
   },
@@ -16,8 +17,14 @@ export async function exportCommand(
   const useJson = opts.json ?? false;
   const format = (opts.format ?? "md") as ExportFormat;
   try {
+    if (!opts.schema && !opts.noSchema) {
+      throw new PublishableError(
+        "SCHEMA_REQUIRED",
+        "Schema required. Use --schema <name> (e.g. --schema blog) or --no-schema to skip validation.",
+      );
+    }
     const content = await service.export(handle, {
-      schema: opts.schema,
+      schema: opts.noSchema ? undefined : opts.schema,
       format,
     });
     if (opts.output) {
