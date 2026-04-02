@@ -56,9 +56,6 @@ created_at: 2026-03-29T18:20:00Z
 title: "My Post Title"
 slug: my-post-title
 summary: "A short summary."
-tags:
-  - ai
-  - api
 ---
 # My Post Title
 
@@ -69,9 +66,9 @@ Metadata files (`publishable.md`) contain only frontmatter with an empty body.
 
 ## Schemas
 
-There are 4 built-in schemas: `blog`, `linkedin`, `bluesky`, `x`. They are defined in `src/schemas/defaults.ts`. Schemas are **not** written to disk during `init` — they are only created when a user customizes one via `publishable schema customize <name>`.
+There is 1 built-in schema: `blog`. It is defined in `src/schemas/defaults.ts`. Schemas are **not** written to disk during `init` — they are only created when a user customizes one via `publishable schema customize <name>`.
 
-Select a schema with `--schema <name>` on `validate` and `export` commands. Defaults to `blog`.
+`--schema` is optional on `validate` and `export`. When omitted, frontmatter validation is skipped and content is exported as-is. This is the intended workflow for body-only content (social posts, etc.).
 
 The `schema: {name}/v1` field in version files (e.g. `schema: blog/v1`) is **injected by the CLI** during write. It is NOT required in the user's input markdown file. The ValidationService does not check for it.
 
@@ -80,12 +77,12 @@ The `schema: {name}/v1` field in version files (e.g. `schema: blog/v1`) is **inj
 Content moves through three stages:
 
 1. **`update`** — Saves content without any validation. Use freely while drafting. Always succeeds (no schema checks).
-2. **`validate`** — Dry-run schema inspection. Reports errors but always exits `0`. Use to check content before committing.
-3. **`export`** — Validates strictly, then outputs clean content. Exits non-zero if validation fails. This is the gate before publishing.
+2. **`validate`** — Dry-run schema inspection. Reports errors but always exits `0`. Use to check content before committing. Omit `--schema` to skip validation.
+3. **`export`** — Outputs clean content. When `--schema` is provided, validates strictly and exits non-zero if validation fails. Omit `--schema` to export body-only content without validation.
 
 Export formats (`--format`):
 
-- `md` — Content-only frontmatter (title, slug, summary, tags) + body
+- `md` — Content-only frontmatter (title, slug, summary) + body
 - `body` — Markdown body only
 - `json` — Content fields as a plain JSON object
 
@@ -114,19 +111,19 @@ Examples of valid handles: `my-post`, `phase-0-spec`, `api-guide-2024`
 
 ## Architecture Layers
 
-| Layer                | Location                               | Responsibility                                       |
-| -------------------- | -------------------------------------- | ---------------------------------------------------- |
-| Schema definitions   | `src/schemas/defaults.ts`              | Built-in JSON schemas for blog, linkedin, bluesky, x |
-| CLI wiring           | `src/index.ts`                         | Register commander commands                          |
-| Command handlers     | `src/commands/*.ts`                    | Thin: call service, call output helper               |
-| Business logic       | `src/services/PublishableService.ts`   | Orchestrate validation + storage                     |
-| Validation           | `src/services/ValidationService.ts`    | Returns result, never throws                         |
-| Filesystem interface | `src/filesystem/IFileSystem.ts`        | Abstraction for all fs I/O (6 async methods)         |
-| Filesystem (real)    | `src/filesystem/NodeFileSystem.ts`     | Node.js `fs/promises` wrapper                        |
-| Filesystem (test)    | `src/filesystem/InMemoryFileSystem.ts` | In-memory mock used in all tests                     |
-| Types                | `src/types.ts`                         | Shared TypeScript interfaces                         |
-| Errors               | `src/utils/errors.ts`                  | `PublishableError` class                             |
-| Output               | `src/utils/output.ts`                  | Human-readable and JSON output                       |
+| Layer                | Location                               | Responsibility                               |
+| -------------------- | -------------------------------------- | -------------------------------------------- |
+| Schema definitions   | `src/schemas/defaults.ts`              | Built-in JSON schema for blog                |
+| CLI wiring           | `src/index.ts`                         | Register commander commands                  |
+| Command handlers     | `src/commands/*.ts`                    | Thin: call service, call output helper       |
+| Business logic       | `src/services/PublishableService.ts`   | Orchestrate validation + storage             |
+| Validation           | `src/services/ValidationService.ts`    | Returns result, never throws                 |
+| Filesystem interface | `src/filesystem/IFileSystem.ts`        | Abstraction for all fs I/O (6 async methods) |
+| Filesystem (real)    | `src/filesystem/NodeFileSystem.ts`     | Node.js `fs/promises` wrapper                |
+| Filesystem (test)    | `src/filesystem/InMemoryFileSystem.ts` | In-memory mock used in all tests             |
+| Types                | `src/types.ts`                         | Shared TypeScript interfaces                 |
+| Errors               | `src/utils/errors.ts`                  | `PublishableError` class                     |
+| Output               | `src/utils/output.ts`                  | Human-readable and JSON output               |
 
 ## Tests
 

@@ -360,12 +360,12 @@ export class PublishableService {
     schema?: string,
   ): Promise<ValidationResult> {
     await this.assertVaultInitialized();
-    const resolvedSchema = schema ?? "blog";
-    const schemaJson = await this.readSchemaFile(resolvedSchema);
+    if (!schema) return { valid: true, errors: [] };
+    const schemaJson = await this.readSchemaFile(schema);
     const parsed = matter(fileContent);
     const body = parsed.content.trimStart();
     const result = this.validator.validate(parsed.data, body, schemaJson);
-    return { ...result, schema: resolvedSchema };
+    return { ...result, schema };
   }
 
   async validateVersion(
@@ -373,15 +373,15 @@ export class PublishableService {
     schema?: string,
   ): Promise<ValidationResult> {
     await this.assertVaultInitialized();
-    const resolvedSchema = schema ?? "blog";
-    const schemaJson = await this.readSchemaFile(resolvedSchema);
+    if (!schema) return { valid: true, errors: [] };
+    const schemaJson = await this.readSchemaFile(schema);
     const contentFields = extractContentFields(version.frontmatter);
     const result = this.validator.validate(
       contentFields,
       version.body,
       schemaJson,
     );
-    return { ...result, schema: resolvedSchema };
+    return { ...result, schema };
   }
 
   async init(): Promise<{ schemas: string[] }> {
@@ -625,22 +625,21 @@ export class PublishableService {
     this.assertValidHandle(handle);
     const version = await this.current(handle);
 
-    const resolvedSchema = opts.schema ?? "blog";
-    const schemaJson = await this.readSchemaFile(resolvedSchema);
-
-    const contentForValidation = extractContentFields(version.frontmatter);
-
-    const validation = this.validator.validate(
-      contentForValidation,
-      version.body,
-      schemaJson,
-    );
-    if (!validation.valid) {
-      throw new PublishableError(
-        "SCHEMA_VALIDATION_FAILED",
-        "Publishable content failed validation",
-        validation.errors,
+    if (opts.schema) {
+      const schemaJson = await this.readSchemaFile(opts.schema);
+      const contentForValidation = extractContentFields(version.frontmatter);
+      const validation = this.validator.validate(
+        contentForValidation,
+        version.body,
+        schemaJson,
       );
+      if (!validation.valid) {
+        throw new PublishableError(
+          "SCHEMA_VALIDATION_FAILED",
+          "Publishable content failed validation",
+          validation.errors,
+        );
+      }
     }
 
     return this.serializeVersionAs(version, opts.format);

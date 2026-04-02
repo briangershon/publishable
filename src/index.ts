@@ -121,18 +121,19 @@ program
 program
   .command("validate <handle>")
   .description("Validate the current version of a publishable against a schema")
-  .option("--schema <type>", "Schema name (default: blog)", "blog")
+  .option("--schema <type>", "Schema to validate against (e.g. blog)")
   .option("--json", "Output as JSON")
   .addHelpText(
     "after",
     `
 Examples:
   publishable validate my-post
-  publishable validate my-post --schema linkedin
+  publishable validate my-post --schema blog
   publishable validate my-post --json
 
 Note: Always exits 0 — this is a dry-run inspection tool. Use "export" to
       validate and get output in one step (exits non-zero on invalid content).
+      Omit --schema to skip validation and inspect structure only.
 `,
   )
   .action(validateCommand);
@@ -145,29 +146,25 @@ program
     "Output format: md, body, or json (default: md)",
     "md",
   )
-  .option(
-    "--schema <type>",
-    "Schema to validate against (default: blog)",
-    "blog",
-  )
+  .option("--schema <type>", "Schema to validate against (e.g. blog)")
   .option("--output <file>", "Write output to file instead of stdout")
   .option("--json", "Output as JSON envelope")
   .addHelpText(
     "after",
     `
-Validates the current version against a schema, then outputs clean content.
-Exits non-zero if validation fails.
+Outputs clean content. When --schema is provided, validates first and exits
+non-zero if validation fails. Omit --schema for body-only content (no
+frontmatter validation required).
 
 Formats:
-  md    — content-only frontmatter (title, slug, summary, tags) + body
-  body  — just the markdown body text (paste into LinkedIn, Bluesky, X, etc.)
+  md    — content-only frontmatter (title, slug, summary) + body
+  body  — just the markdown body text
   json  — content fields as a plain JSON object
 
 Examples:
-  publishable export my-post
-  publishable export my-post --format body
+  publishable export my-post --schema blog
+  publishable export my-social-post --format body
   publishable export my-post --format md --output clean.md
-  publishable export my-li-post --schema linkedin --format body
 `,
   )
   .action(exportCommand);

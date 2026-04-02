@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { ValidationService } from "./ValidationService.js";
-import {
-  BLOG_SCHEMA,
-  LINKEDIN_SCHEMA,
-  BLUESKY_SCHEMA,
-  X_SCHEMA,
-} from "../schemas/defaults.js";
+import { BLOG_SCHEMA } from "../schemas/defaults.js";
 
 const validBlogFrontmatter = {
   title: "My Post",
@@ -121,24 +116,6 @@ describe("ValidationService", () => {
         BLOG_SCHEMA,
       );
       expect(result.valid).toBe(true);
-    });
-  });
-
-  describe("linkedin schema", () => {
-    it("accepts valid linkedin body without heading", () => {
-      expect(svc.validate({}, bodyNoHeading, LINKEDIN_SCHEMA).valid).toBe(true);
-    });
-  });
-
-  describe("bluesky schema", () => {
-    it("accepts valid bluesky body without heading", () => {
-      expect(svc.validate({}, bodyNoHeading, BLUESKY_SCHEMA).valid).toBe(true);
-    });
-  });
-
-  describe("x schema", () => {
-    it("accepts valid x body without heading", () => {
-      expect(svc.validate({}, bodyNoHeading, X_SCHEMA).valid).toBe(true);
     });
   });
 

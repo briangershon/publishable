@@ -191,17 +191,27 @@ Body content.
   });
 
   describe("validate()", () => {
-    it("returns valid for correct content", async () => {
-      const result = await svc.validate(validMarkdown);
+    it("returns valid for correct content with schema", async () => {
+      const result = await svc.validate(validMarkdown, "blog");
       expect(result.valid).toBe(true);
     });
 
-    it("returns invalid without throwing for bad content", async () => {
+    it("returns invalid without throwing for bad content with schema", async () => {
       const result = await svc.validate(
         "---\ntitle: Test\n---\nno heading here",
+        "blog",
       );
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
+    });
+
+    it("returns valid without validating when no schema provided", async () => {
+      const result = await svc.validate(
+        "---\ntitle: Test\n---\nno heading here",
+      );
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+      expect(result.schema).toBeUndefined();
     });
   });
 
@@ -210,15 +220,21 @@ Body content.
       await svc.update("my-post", validMarkdown, {});
     });
 
-    it("throws SCHEMA_VALIDATION_FAILED for invalid content", async () => {
+    it("throws SCHEMA_VALIDATION_FAILED for invalid content when schema provided", async () => {
       await svc.update(
         "bad-post",
         "---\ntitle: Test\n---\nNo heading here",
         {},
       );
       await expect(
-        svc.export("bad-post", { format: "md" }),
+        svc.export("bad-post", { format: "md", schema: "blog" }),
       ).rejects.toMatchObject({ code: "SCHEMA_VALIDATION_FAILED" });
+    });
+
+    it("exports without validating when no schema provided", async () => {
+      await svc.update("body-only-post", "Just some body text.", {});
+      const result = await svc.export("body-only-post", { format: "body" });
+      expect(result).toContain("Just some body text.");
     });
 
     it("format md returns content-only frontmatter + body", async () => {
@@ -286,9 +302,7 @@ Body content.
       const result = await svc.schemaList();
       const names = result.schemas.map((s) => s.name);
       expect(names).toContain("blog");
-      expect(names).toContain("linkedin");
-      expect(names).toContain("bluesky");
-      expect(names).toContain("x");
+      expect(names).toHaveLength(1);
       expect(result.schemas.find((s) => s.name === "blog")?.source).toBe(
         "default",
       );

@@ -28,39 +28,6 @@ export const BLOG_SCHEMA = {
   },
 };
 
-export const LINKEDIN_SCHEMA = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
-  title: "LinkedIn Post",
-  type: "object",
-  properties: {},
-  "x-publishable": {
-    body: { required: true },
-  },
-};
-
-export const BLUESKY_SCHEMA = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
-  title: "Bluesky Post",
-  type: "object",
-  properties: {},
-  "x-publishable": {
-    body: { required: true },
-  },
-};
-
-export const X_SCHEMA = {
-  $schema: "https://json-schema.org/draft/2020-12/schema",
-  title: "X Post",
-  type: "object",
-  properties: {},
-  "x-publishable": {
-    body: { required: true },
-  },
-};
-
 export const DEFAULT_SCHEMAS: Record<string, object> = {
   blog: BLOG_SCHEMA,
-  linkedin: LINKEDIN_SCHEMA,
-  bluesky: BLUESKY_SCHEMA,
-  x: X_SCHEMA,
 };

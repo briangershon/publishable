@@ -2,7 +2,7 @@
 
 A content management tool for creating publishable posts with standardized metadata, built-in validation, and full version history.
 
-- Prevents missing publishing fields by standardizing required inputs, with sample schemas for blog posts, LinkedIn articles, Bluesky posts, and X posts. You can also customize existing schemas or create your own.
+- Prevents missing publishing fields by standardizing required inputs, with a built-in schema for blog posts. You can also customize existing schemas or create your own.
 - Saves every revision, making it easy to review changes or restore earlier versions.
 
 ## Installation
@@ -32,7 +32,9 @@ publishable --help
 
 ## Built-in schemas
 
-Built-in schemas: `blog` (default), `linkedin`, `bluesky`, `x`. Run `publishable schema show <name>` to inspect a schema.
+Built-in schema: `blog`. Run `publishable schema show blog` to inspect it.
+
+Social and body-only content (LinkedIn, Bluesky, X, etc.) doesn't require a schema — omit `--schema` on `validate` and `export` to skip frontmatter validation and export body content directly.
 
 Custom schemas: run `publishable schema --help` for details.
 

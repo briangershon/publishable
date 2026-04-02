@@ -1,11 +1,6 @@
 export type Handle = string;
 
-export const BUILTIN_SCHEMA_TYPES = [
-  "blog",
-  "linkedin",
-  "bluesky",
-  "x",
-] as const;
+export const BUILTIN_SCHEMA_TYPES = ["blog"] as const;
 export type BuiltinSchemaType = (typeof BUILTIN_SCHEMA_TYPES)[number];
 
 export interface PublishableSchemaBody {
