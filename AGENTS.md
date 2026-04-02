@@ -11,10 +11,12 @@ Each file has a distinct, non-overlapping purpose. Do not add content to a file 
 | File        | Audience                                              | Contains                                                     |
 | ----------- | ----------------------------------------------------- | ------------------------------------------------------------ |
 | `--help`    | CLI users / agents running the tool                   | Canonical command reference: all commands, options, formats  |
-| `README.md` | GitHub browsers / developers discovering the project  | Tagline, install, minimal quickstart, built-in schemas table |
+| `README.md` | GitHub browsers / developers discovering the project  | Tagline, install, minimal quickstart, built-in schema names  |
 | `AGENTS.md` | Developers / AI coding agents working on the codebase | Engineering rules, architecture decisions, test patterns     |
 
 If you are adding a new command or option, update the CLI help text — not README or AGENTS.md.
+
+**Schema details belong in code only.** Do not write schema field requirements, character limits, or body constraints to README, AGENTS.md, or CLI help text. Only list the names of built-in schemas and the file where they are defined (`src/schemas/defaults.ts`). This prevents docs from going stale when schemas change.
 
 ---
 
@@ -67,7 +69,7 @@ Metadata files (`publishable.md`) contain only frontmatter with an empty body.
 
 ## Schemas
 
-There are 4 built-in schemas: `blog`, `linkedin`, `bluesky`, `x`. They are defined as JSON Schema objects (with an `x-publishable` body extension) in `src/schemas/defaults.ts` and written to `{vault}/schemas/{name}.json` during `publishable init`.
+There are 4 built-in schemas: `blog`, `linkedin`, `bluesky`, `x`. They are defined in `src/schemas/defaults.ts`. Schemas are **not** written to disk during `init` — they are only created when a user customizes one via `publishable schema customize <name>`.
 
 Select a schema with `--schema <name>` on `validate` and `export` commands. Defaults to `blog`.
 

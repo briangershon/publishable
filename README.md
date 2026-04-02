@@ -32,14 +32,9 @@ publishable --help
 
 ## Built-in schemas
 
-| Schema           | Required fields                    | Body                        |
-| ---------------- | ---------------------------------- | --------------------------- |
-| `blog` (default) | `title`, `slug`, `summary`, `tags` | Must start with `# heading` |
-| `linkedin`       | `title`, `summary` (≤3000 chars)   | Required                    |
-| `bluesky`        | `title`, `summary` (≤300 chars)    | Required                    |
-| `x`              | `title`, `summary` (≤280 chars)    | Required                    |
+Built-in schemas: `blog` (default), `linkedin`, `bluesky`, `x`. Run `publishable schema show <name>` to inspect a schema.
 
-Custom schemas: drop any JSON Schema 2020-12 file into `{vault}/schemas/<name>.json` and use `--schema <name>`.
+Custom schemas: run `publishable schema --help` for details.
 
 ## Local Development
 

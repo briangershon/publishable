@@ -40,11 +40,8 @@ Workflow:
      publishable export my-post --format body     # paste-ready body text
 
 Built-in schemas (used with "export" and "validate"):
-──────────────────────────────────────────────────────
-  blog      — title, slug, summary, tags required; body required
-  linkedin  — title, summary (≤3000 chars) required; body required
-  bluesky   — title, summary (≤300 chars) required; body required
-  x         — title, summary (≤280 chars) required; body required
+  blog (default), linkedin, bluesky, x
+  Run "publishable schema show <name>" to inspect a schema.
 
 Custom schemas:
   Use "publishable schema --help" to list, create, and update schemas.
