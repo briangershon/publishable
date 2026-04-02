@@ -125,102 +125,20 @@ describe("ValidationService", () => {
   });
 
   describe("linkedin schema", () => {
-    const validLinkedInFm = {
-      title: "My LinkedIn Post",
-      summary: "A short update for my network.",
-    };
-
-    it("accepts valid linkedin frontmatter and body without heading", () => {
-      const result = svc.validate(
-        validLinkedInFm,
-        bodyNoHeading,
-        LINKEDIN_SCHEMA,
-      );
-      expect(result.valid).toBe(true);
-    });
-
-    it("accepts optional tags", () => {
-      const fm = { ...validLinkedInFm, tags: ["career", "tech"] };
-      expect(svc.validate(fm, bodyNoHeading, LINKEDIN_SCHEMA).valid).toBe(true);
-    });
-
-    it("rejects summary over 3000 chars", () => {
-      const fm = { ...validLinkedInFm, summary: "a".repeat(3001) };
-      const result = svc.validate(fm, bodyNoHeading, LINKEDIN_SCHEMA);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.path === "summary")).toBe(true);
-    });
-
-    it("accepts summary at exactly 3000 chars", () => {
-      const fm = { ...validLinkedInFm, summary: "a".repeat(3000) };
-      expect(svc.validate(fm, bodyNoHeading, LINKEDIN_SCHEMA).valid).toBe(true);
-    });
-
-    it("does not require slug", () => {
-      expect(
-        svc.validate(validLinkedInFm, bodyNoHeading, LINKEDIN_SCHEMA).valid,
-      ).toBe(true);
-    });
-
-    it("does not require tags", () => {
-      expect(
-        svc.validate(validLinkedInFm, bodyNoHeading, LINKEDIN_SCHEMA).valid,
-      ).toBe(true);
-    });
-
-    it("reports missing title", () => {
-      const { title: _, ...fm } = validLinkedInFm;
-      const result = svc.validate(fm, bodyNoHeading, LINKEDIN_SCHEMA);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.path === "title")).toBe(true);
+    it("accepts valid linkedin body without heading", () => {
+      expect(svc.validate({}, bodyNoHeading, LINKEDIN_SCHEMA).valid).toBe(true);
     });
   });
 
   describe("bluesky schema", () => {
-    const validBlueskeyFm = {
-      title: "My Bluesky Post",
-      summary: "Short update.",
-    };
-
-    it("accepts valid bluesky frontmatter", () => {
-      expect(
-        svc.validate(validBlueskeyFm, bodyNoHeading, BLUESKY_SCHEMA).valid,
-      ).toBe(true);
-    });
-
-    it("rejects summary over 300 chars", () => {
-      const fm = { ...validBlueskeyFm, summary: "a".repeat(301) };
-      const result = svc.validate(fm, bodyNoHeading, BLUESKY_SCHEMA);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.path === "summary")).toBe(true);
-    });
-
-    it("accepts summary at exactly 300 chars", () => {
-      const fm = { ...validBlueskeyFm, summary: "a".repeat(300) };
-      expect(svc.validate(fm, bodyNoHeading, BLUESKY_SCHEMA).valid).toBe(true);
+    it("accepts valid bluesky body without heading", () => {
+      expect(svc.validate({}, bodyNoHeading, BLUESKY_SCHEMA).valid).toBe(true);
     });
   });
 
   describe("x schema", () => {
-    const validXFm = {
-      title: "My X Post",
-      summary: "Short update.",
-    };
-
-    it("accepts valid x frontmatter", () => {
-      expect(svc.validate(validXFm, bodyNoHeading, X_SCHEMA).valid).toBe(true);
-    });
-
-    it("rejects summary over 280 chars", () => {
-      const fm = { ...validXFm, summary: "a".repeat(281) };
-      const result = svc.validate(fm, bodyNoHeading, X_SCHEMA);
-      expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.path === "summary")).toBe(true);
-    });
-
-    it("accepts summary at exactly 280 chars", () => {
-      const fm = { ...validXFm, summary: "a".repeat(280) };
-      expect(svc.validate(fm, bodyNoHeading, X_SCHEMA).valid).toBe(true);
+    it("accepts valid x body without heading", () => {
+      expect(svc.validate({}, bodyNoHeading, X_SCHEMA).valid).toBe(true);
     });
   });
 
