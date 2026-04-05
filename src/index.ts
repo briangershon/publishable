@@ -36,12 +36,14 @@ program.addHelpText(
   `
 Workflow:
 ─────────
-  1. publishable init                                        # set up vault
-  2. publishable update my-post --file draft.md              # create draft, no validation
-  3. publishable update my-post --file draft.md              # keep iterating freely
-  4. publishable schema create blog --file blog-schema.json  # create a schema
-  5. publishable export my-post --schema blog --format md    # validate + get clean output
-     publishable export my-post --schema blog --format body  # paste-ready body text
+  1. publishable init                                              # set up vault (one-time)
+  2. publishable update sunflowers --file sunflowers.md           # create draft, no validation
+     publishable update tulips --file tulips.md                   # create more drafts
+     publishable update radishes --file radishes.md
+  3. publishable update sunflowers --file sunflowers.md           # keep iterating freely
+  4. publishable schema create gardening --file gardening.json    # create a schema (one-time)
+  5. publishable export sunflowers --schema gardening --format md # validate + get clean output
+     publishable export sunflowers --schema gardening --format body # paste-ready body text
 
 Built-in schemas (used with "export" and "validate"):
   blog
@@ -50,17 +52,14 @@ Built-in schemas (used with "export" and "validate"):
 Custom schemas:
   Use "publishable schema --help" to list, create, and update schemas.
 
-Example blog file:
-──────────────────
+Example gardening file:
+───────────────────────
   ---
-  title: "Getting Started with the API"
-  slug: getting-started-with-the-api
-  summary: "A practical introduction to the API for new users."
-  tags:
-    - api
-    - tutorial
+  plant_name: "Sunflower"
+  sun: "full sun"
+  planted_date: "2026-03-15"
   ---
-  # Getting Started with the API
+  # Sunflower
 
   Your content here...
 
@@ -89,7 +88,7 @@ program
     `
 Run this first to set up your publishable vault. Creates the vault directory.
 
-Built-in schemas (blog, linkedin, bluesky, x) are available immediately — no
+Built-in schema (blog) are available immediately — no
 files are written. To customize a built-in schema, run:
   publishable schema customize <name>
 `,

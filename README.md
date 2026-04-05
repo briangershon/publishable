@@ -19,16 +19,17 @@ npx @briangershon/publishable --help
 
 ## Quickstart
 
-```bash
-# Save a draft (no validation, iterate freely)
-publishable update my-post --file draft.md
+Imagine you're running a gardening website. Each post covers a specific plant and needs structured metadata: plant name, sun requirements, and planting date. Here's how to draft, validate, and export those posts with `publishable`:
 
-# Export when ready (validates + renders clean output)
-publishable export my-post --format md
-
-# See all commands
-publishable --help
-```
+| Claude Code Prompt | CLI Command |
+| --- | --- |
+| "Set up my publishable vault" _(one-time setup)_ | `publishable init` |
+| "Create a draft for a gardening post about sunflowers. Include plant name, sun requirements, and planting date." | `publishable update sunflowers --file sunflowers.md` |
+| "Create a draft for my tulips post" | `publishable update tulips --file tulips.md` |
+| "Create a draft for my radishes post" | `publishable update radishes --file radishes.md` |
+| "Update my sunflowers draft with the latest notes" | `publishable update sunflowers --file sunflowers.md` |
+| "Create a gardening schema that requires plant name, sun requirements, and planting date" _(one-time per schema)_ | `publishable schema create gardening --file gardening-schema.json` |
+| "Export my sunflowers post using the gardening schema as markdown" | `publishable export sunflowers --schema gardening --format md` |
 
 ## Built-in schemas
 

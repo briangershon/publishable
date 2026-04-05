@@ -40,34 +40,47 @@ publishable schema <subcommand> --help
 
 ## Core Workflow
 
-Content moves through three stages:
+Example: a gardening website with posts for each plant, tracking plant name, sun requirements, and planting date.
 
 ```bash
-# 1. Save a draft — no validation, safe to run repeatedly while writing
-publishable update my-post --file draft.md
+# One-time setup
+publishable init
 
-# 2. Check validity without blocking (exits 0 even if invalid)
-publishable validate my-post --schema blog
+# Draft posts freely — no validation, safe to run repeatedly
+publishable update sunflowers --file sunflowers.md
+publishable update tulips --file tulips.md
+publishable update radishes --file radishes.md
 
-# 3. Export publish-ready output — validates strictly, exits non-zero on failure
-publishable export my-post --schema blog --format md
+# Iterate on a draft
+publishable update sunflowers --file sunflowers.md
+
+# Create a schema once (e.g. gardening: plant name, sun requirements, planting date)
+publishable schema create gardening --file gardening-schema.json
+
+# Check validity without blocking (exits 0 even if invalid)
+publishable validate sunflowers --schema gardening
+
+# Export publish-ready output — validates strictly, exits non-zero on failure
+publishable export sunflowers --schema gardening --format md
 ```
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `init` | Set up vault and config |
-| `update <handle>` | Create or update content from a markdown file |
-| `current <handle>` | Read the current version |
-| `validate <handle>` | Dry-run schema check (always exits 0) |
-| `export <handle>` | Validate and output publish-ready content (exits non-zero on failure) |
-| `versions <handle>` | List version history |
-| `show <handle> <version>` | Read a specific version |
-| `revert <handle> <version>` | Create a new version from an older one |
-| `list` | List all publishables |
-| `get <handle>` | Read publishable metadata |
-| `schema` | Manage schemas (show, list, customize, create, update) |
+| Command                     | Description                                                           |
+| --------------------------- | --------------------------------------------------------------------- |
+| `init`                      | Set up vault and config                                               |
+| `update <handle>`           | Create or update content from a markdown file                         |
+| `current <handle>`          | Read the current version                                              |
+| `validate <handle>`         | Dry-run schema check (always exits 0)                                 |
+| `export <handle>`           | Validate and output publish-ready content (exits non-zero on failure) |
+| `versions <handle>`         | List version history                                                  |
+| `show <handle> <version>`   | Read a specific version                                               |
+| `revert <handle> <version>` | Create a new version from an older one                                |
+| `list`                      | List all publishables                                                 |
+| `get <handle>`              | Read publishable metadata                                             |
+| `rename <handle> <new>`     | Rename a publishable to a new handle                                  |
+| `delete <handle>`           | Permanently delete a publishable and all its versions                 |
+| `schema`                    | Manage schemas (show, list, customize, create, update)                |
 
 Run `publishable <command> --help` for full options on any command.
 
@@ -75,11 +88,11 @@ Run `publishable <command> --help` for full options on any command.
 
 `--format` options for `export`:
 
-| Format | Output |
-|---|---|
-| `md` | Content frontmatter (title, slug, summary) + markdown body |
-| `body` | Markdown body only |
-| `json` | Content fields as a JSON object |
+| Format | Output                                                     |
+| ------ | ---------------------------------------------------------- |
+| `md`   | Content frontmatter (title, slug, summary) + markdown body |
+| `body` | Markdown body only                                         |
+| `json` | Content fields as a JSON object                            |
 
 ## Schemas
 
