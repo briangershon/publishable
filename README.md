@@ -1,9 +1,8 @@
 # @briangershon/publishable
 
-A content management tool for creating publishable posts with standardized metadata, built-in validation, and full version history.
+Use any tools you like to write your content and publish it — `publishable` focuses on one thing: ensuring your metadata is consistent every time you export. Define a schema that specifies the frontmatter fields each post requires (title, summary, tags, dates, etc.), and `publishable` validates those fields at export time. Every save is versioned so you can review history or restore earlier drafts.
 
-- Prevents missing publishing fields by standardizing required inputs, with a built-in schema for blog posts. You can also customize existing schemas or create your own.
-- Saves every revision, making it easy to review changes or restore earlier versions.
+Most static site generators (Astro, Hugo, Jekyll, Eleventy, Next.js) expect a markdown file per post with YAML frontmatter. Export your post as a complete markdown file — or as JSON — in the exact shape your site requires.
 
 ## Installation
 

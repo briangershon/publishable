@@ -2,12 +2,16 @@
 
 ## Purpose
 
-`publishable` is a CLI for creating, versioning, validating, and exporting structured content (blog posts, etc.) with standardized metadata. Use it when you need to:
+`publishable` ensures content metadata is consistent at export time. Use any tools to draft content and any tools to publish — `publishable` sits in the middle: it tracks every version of your content and validates frontmatter fields (title, summary, tags, dates, etc.) against a schema you define, so every export is consistent.
 
-- Draft and iterate on content without validation pressure
-- Validate content against a schema before publishing
+Use it when you need to:
+
+- Draft and iterate freely without validation pressure
+- Enforce consistent metadata (frontmatter) at export time via a schema
 - Export publish-ready content in markdown, body-only, or JSON format
 - Browse or restore version history for a piece of content
+
+**Common use cases:** Most static site generators (Astro, Hugo, Jekyll, Eleventy, Next.js) expect a markdown file per post with YAML frontmatter. Export your post as a complete markdown file — or as JSON — in the exact shape your site requires.
 
 ## Installation
 

@@ -26,7 +26,7 @@ const program = new Command();
 program
   .name("publishable")
   .description(
-    "A content management tool for creating publishable posts with standardized metadata, built-in validation, and full version history.",
+    "Ensures your content metadata is consistent at export time. Use any tools to draft and publish — publishable tracks versions and validates frontmatter fields against a schema you define.",
   )
   .version(pkg.version)
   .showHelpAfterError();
