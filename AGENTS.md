@@ -185,6 +185,7 @@ Never inspect or edit vault files directly. The vault (`~/.publishable/vault/`) 
 | Code                       | Meaning                                           |
 | -------------------------- | ------------------------------------------------- |
 | `PUBLISHABLE_NOT_FOUND`    | Handle does not exist in the vault                |
+| `HANDLE_ALREADY_EXISTS`    | Target handle is already in use (rename conflict) |
 | `VERSION_NOT_FOUND`        | Version number does not exist for handle          |
 | `INVALID_HANDLE`           | Handle fails regex validation                     |
 | `SCHEMA_NOT_FOUND`         | Schema name does not exist in `vault/schemas/`    |

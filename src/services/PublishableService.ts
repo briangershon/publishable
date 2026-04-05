@@ -8,6 +8,7 @@ import { ValidationService } from "./ValidationService.js";
 import { PublishableError } from "../utils/errors.js";
 import { DEFAULT_SCHEMAS } from "../schemas/defaults.js";
 import type {
+  DeleteResult,
   ErrorCode,
   ExportFormat,
   Handle,
@@ -587,6 +588,56 @@ export class PublishableService {
     }
     await this.writeSchemaFile(name, DEFAULT_SCHEMAS[name]);
     return { name, path: this.schemaPath(name) };
+  }
+
+  async rename(handle: string, newHandle: string): Promise<PublishableSummary> {
+    await this.assertVaultInitialized();
+    this.assertValidHandle(handle);
+    this.assertValidHandle(newHandle);
+    await this.readMeta(handle); // throws PUBLISHABLE_NOT_FOUND if missing
+    try {
+      await this.readMeta(newHandle);
+      throw new PublishableError(
+        "HANDLE_ALREADY_EXISTS",
+        `Publishable '${newHandle}' already exists`,
+      );
+    } catch (e) {
+      if (
+        !(e instanceof PublishableError) ||
+        e.code !== "PUBLISHABLE_NOT_FOUND"
+      )
+        throw e;
+    }
+    try {
+      await this.fs.rename(
+        this.publishableDir(handle),
+        this.publishableDir(newHandle),
+      );
+    } catch (err) {
+      throw new PublishableError(
+        "STORAGE_ERROR",
+        `Failed to rename '${handle}' to '${newHandle}': ${String(err)}`,
+      );
+    }
+    const meta = await this.readMeta(newHandle);
+    const updatedMeta: PublishableMeta = { ...meta, handle: newHandle };
+    await this.writeMeta(updatedMeta);
+    return this.metaToSummary(updatedMeta);
+  }
+
+  async delete(handle: string): Promise<DeleteResult> {
+    await this.assertVaultInitialized();
+    this.assertValidHandle(handle);
+    await this.readMeta(handle); // throws PUBLISHABLE_NOT_FOUND if missing
+    try {
+      await this.fs.rm(this.publishableDir(handle), { recursive: true });
+    } catch (err) {
+      throw new PublishableError(
+        "STORAGE_ERROR",
+        `Failed to delete '${handle}': ${String(err)}`,
+      );
+    }
+    return { handle, deleted: true };
   }
 
   async serializeVersion(version: PublishableVersion): Promise<string> {

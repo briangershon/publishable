@@ -272,6 +272,89 @@ Body content.
     });
   });
 
+  describe("rename()", () => {
+    it("renames a publishable and updates the handle in metadata", async () => {
+      await svc.update("old-name", validMarkdown, {});
+      const result = await svc.rename("old-name", "new-name");
+      expect(result.handle).toBe("new-name");
+      expect(result.current_version).toBe(1);
+    });
+
+    it("makes the old handle inaccessible after rename", async () => {
+      await svc.update("old-name", validMarkdown, {});
+      await svc.rename("old-name", "new-name");
+      await expect(svc.get("old-name")).rejects.toMatchObject({
+        code: "PUBLISHABLE_NOT_FOUND",
+      });
+    });
+
+    it("preserves version history after rename", async () => {
+      await svc.update("old-name", validMarkdown, {});
+      await svc.update("old-name", validMarkdown, { message: "v2" });
+      await svc.rename("old-name", "new-name");
+      const versions = await svc.versions("new-name");
+      expect(versions.versions).toEqual([1, 2]);
+      expect(versions.current_version).toBe(2);
+    });
+
+    it("throws PUBLISHABLE_NOT_FOUND for unknown handle", async () => {
+      await expect(svc.rename("nonexistent", "new-name")).rejects.toMatchObject(
+        { code: "PUBLISHABLE_NOT_FOUND" },
+      );
+    });
+
+    it("throws HANDLE_ALREADY_EXISTS when new handle is taken", async () => {
+      await svc.update("post-a", validMarkdown, {});
+      await svc.update("post-b", validMarkdown, {});
+      await expect(svc.rename("post-a", "post-b")).rejects.toMatchObject({
+        code: "HANDLE_ALREADY_EXISTS",
+      });
+    });
+
+    it("throws INVALID_HANDLE for bad new handle", async () => {
+      await svc.update("my-post", validMarkdown, {});
+      await expect(svc.rename("my-post", "Bad_Name")).rejects.toMatchObject({
+        code: "INVALID_HANDLE",
+      });
+    });
+  });
+
+  describe("delete()", () => {
+    it("deletes a publishable and returns deleted: true", async () => {
+      await svc.update("my-post", validMarkdown, {});
+      const result = await svc.delete("my-post");
+      expect(result).toEqual({ handle: "my-post", deleted: true });
+    });
+
+    it("makes the handle inaccessible after deletion", async () => {
+      await svc.update("my-post", validMarkdown, {});
+      await svc.delete("my-post");
+      await expect(svc.get("my-post")).rejects.toMatchObject({
+        code: "PUBLISHABLE_NOT_FOUND",
+      });
+    });
+
+    it("removes the handle from list() after deletion", async () => {
+      await svc.update("post-a", validMarkdown, {});
+      await svc.update("post-b", validMarkdown, {});
+      await svc.delete("post-a");
+      const list = await svc.list();
+      expect(list.map((s) => s.handle)).toEqual(["post-b"]);
+    });
+
+    it("throws PUBLISHABLE_NOT_FOUND for unknown handle", async () => {
+      await expect(svc.delete("nonexistent")).rejects.toMatchObject({
+        code: "PUBLISHABLE_NOT_FOUND",
+      });
+    });
+
+    it("throws INVALID_HANDLE for bad handle", async () => {
+      await expect(svc.delete("Bad_Handle")).rejects.toMatchObject({
+        code: "INVALID_HANDLE",
+      });
+    });
+  });
+
   describe("schemaShow()", () => {
     it("returns name and schema object for an existing schema", async () => {
       const result = await svc.schemaShow("blog");

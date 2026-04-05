@@ -29,4 +29,12 @@ export class NodeFileSystem implements IFileSystem {
   async stat(path: string): Promise<IFileStat> {
     return fs.stat(path);
   }
+
+  async rename(oldPath: string, newPath: string): Promise<void> {
+    await fs.rename(oldPath, newPath);
+  }
+
+  async rm(path: string, options: { recursive: boolean }): Promise<void> {
+    await fs.rm(path, { ...options, force: true });
+  }
 }

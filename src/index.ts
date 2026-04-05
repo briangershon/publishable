@@ -11,6 +11,8 @@ import { revertCommand } from "./commands/revert.js";
 import { listCommand } from "./commands/list.js";
 import { getCommand } from "./commands/get.js";
 import { exportCommand } from "./commands/export.js";
+import { renameCommand } from "./commands/rename.js";
+import { deleteCommand } from "./commands/delete.js";
 import {
   schemaShowCommand,
   schemaListCommand,
@@ -34,13 +36,15 @@ program.addHelpText(
   `
 Workflow:
 ─────────
-  1. publishable update my-post --file draft.md   # save draft, no validation
-  2. publishable update my-post --file draft.md   # keep iterating freely
-  3. publishable export my-post --format md       # validate + get clean output
-     publishable export my-post --format body     # paste-ready body text
+  1. publishable init                                        # set up vault
+  2. publishable update my-post --file draft.md              # create draft, no validation
+  3. publishable update my-post --file draft.md              # keep iterating freely
+  4. publishable schema create blog --file blog-schema.json  # create a schema
+  5. publishable export my-post --schema blog --format md    # validate + get clean output
+     publishable export my-post --schema blog --format body  # paste-ready body text
 
 Built-in schemas (used with "export" and "validate"):
-  blog (default), linkedin, bluesky, x
+  blog
   Run "publishable schema show <name>" to inspect a schema.
 
 Custom schemas:
@@ -200,6 +204,18 @@ program
   .description("Read publishable metadata")
   .option("--json", "Output as JSON")
   .action(getCommand);
+
+program
+  .command("rename <handle> <new-handle>")
+  .description("Rename a publishable to a new handle")
+  .option("--json", "Output as JSON")
+  .action(renameCommand);
+
+program
+  .command("delete <handle>")
+  .description("Permanently delete a publishable and all its versions")
+  .option("--json", "Output as JSON")
+  .action(deleteCommand);
 
 const schemaCmd = program
   .command("schema")

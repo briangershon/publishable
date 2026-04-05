@@ -64,4 +64,32 @@ export class InMemoryFileSystem implements IFileSystem {
     if (this.files.has(path)) return { isDirectory: () => false };
     throw enoent("stat", path);
   }
+
+  async rename(oldPath: string, newPath: string): Promise<void> {
+    for (const [key, value] of [...this.files.entries()]) {
+      if (key === oldPath || key.startsWith(oldPath + "/")) {
+        this.files.delete(key);
+        this.files.set(newPath + key.slice(oldPath.length), value);
+      }
+    }
+    for (const dir of [...this.dirs]) {
+      if (dir === oldPath || dir.startsWith(oldPath + "/")) {
+        this.dirs.delete(dir);
+        this.dirs.add(newPath + dir.slice(oldPath.length));
+      }
+    }
+  }
+
+  async rm(path: string, _options: { recursive: boolean }): Promise<void> {
+    for (const key of [...this.files.keys()]) {
+      if (key === path || key.startsWith(path + "/")) {
+        this.files.delete(key);
+      }
+    }
+    for (const dir of [...this.dirs]) {
+      if (dir === path || dir.startsWith(path + "/")) {
+        this.dirs.delete(dir);
+      }
+    }
+  }
 }

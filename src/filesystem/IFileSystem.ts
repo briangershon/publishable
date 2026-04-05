@@ -9,4 +9,6 @@ export interface IFileSystem {
   writeFile(path: string, content: string, encoding: "utf-8"): Promise<void>;
   readdir(path: string): Promise<string[]>;
   stat(path: string): Promise<IFileStat>;
+  rename(oldPath: string, newPath: string): Promise<void>;
+  rm(path: string, options: { recursive: boolean }): Promise<void>;
 }

@@ -56,6 +56,7 @@ export interface ValidationResult {
 
 export type ErrorCode =
   | "PUBLISHABLE_NOT_FOUND"
+  | "HANDLE_ALREADY_EXISTS"
   | "VERSION_NOT_FOUND"
   | "INVALID_HANDLE"
   | "SCHEMA_NOT_FOUND"
@@ -94,6 +95,11 @@ export interface SchemaCreateResult {
 export interface SchemaUpdateResult {
   name: string;
   updated: true;
+}
+
+export interface DeleteResult {
+  handle: string;
+  deleted: true;
 }
 
 export interface SuccessOutput<T> {
